@@ -46,9 +46,17 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: () async {
-                        ref.read(isLoadingProvider.notifier).state = true;
                         final email = _emailController.text.trim();
                         final password = _passwordController.text.trim();
+
+                        if (email.isEmpty || password.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Wypełnij wszystkie pola!')),
+                          );
+                          return;
+                        }
+
+                        ref.read(isLoadingProvider.notifier).state = true;
 
                         try {
                           await ref.read(authProvider).signIn(email, password);
@@ -73,8 +81,9 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(message)),
                           );
-                        } catch (e) {
-                          
+                        } finally {
+                          ref.read(isLoadingProvider.notifier).state = false;
+                        
                         }
                       },
                       child: const Text('Login'),

@@ -48,13 +48,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: () async{
+                        final email = emailController.text.trim();
+                        final password = passwordController.text.trim();
+                        if (email.isEmpty || password.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Wypełnij wszystkie pola!')),
+                          );
+                          return;
+                        }
                         ref.read(isRegisteringProvider.notifier).state = true;
                         try{
                           await ref.read(registerProvider).registerWithEmailAndPassword(
-                            emailController.text,
-                            passwordController.text,
+                            email,
+                            password,
                           );
-                          ref.read(isRegisteringProvider.notifier).state = false;
+                        
                           if (!mounted) return;
                           
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -75,12 +83,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(message)),
                           );
-                          print(e);
+                        
                         } catch (e) {
                           // Gdyby coś jeszcze poszło źle (np. problem z siecią)
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Coś poszło nie tak. Spróbuj ponownie.')),
                           );
+                        } finally {
+                          ref.read(isRegisteringProvider.notifier).state = false;
                         }
                       },
                       child: const Text('Register'),
