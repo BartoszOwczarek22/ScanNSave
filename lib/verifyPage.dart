@@ -2,6 +2,8 @@ import 'package:scan_n_save/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scan_n_save/logingPage.dart';
+
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
   EmailVerificationPage({super.key})
@@ -84,6 +86,17 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                     ElevatedButton(
                       onPressed: checkEmailVerification,
                       child: const Text('Klikąłem w link!'),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        if (mounted) {
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()),
+                          );
+                        }
+                      },
+                      child: const Text('Wróć do logowania'),
                     ),
                   ],
                 ),
