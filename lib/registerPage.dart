@@ -69,8 +69,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             const SnackBar(content: Text('Zarejestrowano pomyślnie!')),
                           );
 
-                          Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (context) => EmailVerificationPage())
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => EmailVerificationPage()),
+                            (Route<dynamic> route) => false,
                           );
 
                         } on FirebaseAuthException catch (e) {

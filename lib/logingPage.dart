@@ -59,8 +59,8 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                         ref.read(isLoadingProvider.notifier).state = true;
 
                         try {
-                          await ref.read(authProvider).signIn(email, password);
                           ref.read(isLoadingProvider.notifier).state = false;
+                          await ref.read(authProvider).signIn(email, password);
                           if (!mounted) return;
 
                           ScaffoldMessenger.of(context).showSnackBar(

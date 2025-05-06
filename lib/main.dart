@@ -86,12 +86,14 @@ class HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
     if (FirebaseAuth.instance.currentUser?.emailVerified == false) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => EmailVerificationPage())
+        MaterialPageRoute(builder: (context) => EmailVerificationPage()),
       );
     }
+  });
   }
 
   @override
@@ -106,6 +108,7 @@ class HomePageState extends ConsumerState<HomePage> {
                             MaterialPageRoute(builder: (context) => LoginPage())
                           );
             ref.read(isLoadingProvider.notifier).state = false;
+            ref.read(emailVerificationProvider.notifier).state = false;
           },
           child: const Text('wyloguj'),
         ),

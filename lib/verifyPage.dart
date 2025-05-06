@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/logingPage.dart';
 
-
 class EmailVerificationPage extends ConsumerStatefulWidget {
   EmailVerificationPage({super.key})
   {}
@@ -71,8 +70,10 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                     children: [
                       const Text('E-mail zweryfikowany! Możesz kontynuować.'),
                       ElevatedButton(onPressed: ()=>{
-                        Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => HomePage())
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/home', // Nazwa trasy do strony głównej
+                          (Route<dynamic> route) => false, // Usuwa wszystkie poprzednie strony
                         )
                       }, 
                       child: Text('Kontynuuj'),),
