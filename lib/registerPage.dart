@@ -31,14 +31,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             children: [
               TextField(
                 decoration: const InputDecoration(
-                  labelText: 'e-mail',
+                  labelText: 'E-mail',
                 ),
                 controller: emailController,
               ),
               const SizedBox(height: 16),
               TextField(
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Hasło',
                 ),
                 controller: passwordController,
                 obscureText: true,
@@ -95,7 +95,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           ref.read(isRegisteringProvider.notifier).state = false;
                         }
                       },
-                      child: const Text('Register'),
+                      child: const Text('Zarejestruj'),
                     ),
             ],
           ),

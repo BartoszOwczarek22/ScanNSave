@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:scan_n_save/logingPage.dart';
 import 'package:scan_n_save/registerPage.dart';
+import 'package:scan_n_save/resetPasswordPage.dart';
 import 'package:scan_n_save/verifyPage.dart';
 
 void main() async {
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/reset-password': (context) => ResetPasswordPage(),
         '/home': (context) => HomePage(),
       },
     );

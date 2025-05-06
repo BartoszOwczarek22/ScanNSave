@@ -30,18 +30,27 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'e-mail',
+                  labelText: 'E-mail',
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Hasło',
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/reset-password');
+                  },
+                  child:const Text('Nie pamiętasz hasła?', style: TextStyle(decoration: TextDecoration.underline),)),
+              ),
+              const SizedBox(height: 12),
               isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
@@ -86,14 +95,15 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                         
                         }
                       },
-                      child: const Text('Login'),
+                      child: const Text('Zaloguj'),
                     ),
-              Text("You don't have an account?"),
+              SizedBox(height: 16,),
+              Text("Nie masz jeszcze konta?"),
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/register');
                 },
-                child: const Text('Register'),
+                child: const Text('Zarejestruj'),
               ),
             ],
           ),

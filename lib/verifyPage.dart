@@ -72,7 +72,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                       ElevatedButton(onPressed: ()=>{
                         Navigator.pushNamedAndRemoveUntil(
                           context,
-                          '/home', // Nazwa trasy do strony głównej
+                          '/home', // Trasa do ekranu logowania
                           (Route<dynamic> route) => false, // Usuwa wszystkie poprzednie strony
                         )
                       }, 
@@ -86,7 +86,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: checkEmailVerification,
-                      child: const Text('Klikąłem w link!'),
+                      child: const Text('Kliknąłem w link!'),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
