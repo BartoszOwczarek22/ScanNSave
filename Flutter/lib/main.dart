@@ -8,6 +8,8 @@ import 'package:scan_n_save/logingPage.dart';
 import 'package:scan_n_save/registerPage.dart';
 import 'package:scan_n_save/resetPasswordPage.dart';
 import 'package:scan_n_save/verifyPage.dart';
+import 'package:scan_n_save/settings_page.dart';
+import 'sharedprefsnotifire.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,17 +25,21 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,  WidgetRef ref) {
+    final themeMode = ref.watch(themeNotifierProvider);
+    
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      darkTheme: ThemeData.dark(),
+      themeMode: themeMode,
       home: AuthGate(),
       initialRoute: '/',
       routes: {
@@ -106,14 +112,24 @@ class HomePageState extends ConsumerState<HomePage> {
         child: ElevatedButton(
           onPressed: () async {
             await FirebaseAuth.instance.signOut();
-            Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (context) => LoginPage())
-                          );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+            );
             ref.read(isLoadingProvider.notifier).state = false;
             ref.read(emailVerificationProvider.notifier).state = false;
           },
           child: const Text('wyloguj'),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SettingsPage()),
+          );
+        },
+        child: const Icon(Icons.settings),
       ),
     );
   }
