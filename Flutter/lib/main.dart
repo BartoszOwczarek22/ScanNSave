@@ -107,7 +107,7 @@ class HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kamera")),
+      appBar: AppBar(title: const Text("Strona główna")),
       body: Center(
         child: ElevatedButton(
           onPressed: () async {

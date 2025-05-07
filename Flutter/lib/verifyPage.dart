@@ -52,6 +52,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('E-mail został zweryfikowany!')));
+
+        FirebaseAuth.instance.signOut();
+        Navigator.pushNamedAndRemoveUntil(context, "/login", ( route) => false);
         // Opcjonalnie - przejście na inny ekran po weryfikacji
       }
     }

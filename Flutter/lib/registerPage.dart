@@ -21,7 +21,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final isRegistering = ref.watch(isRegisteringProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register Page'),
+        title: const Text('Zarejestruj się'),
       ),
       body: Center(
         child: Padding(
@@ -32,6 +32,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               TextField(
                 decoration: const InputDecoration(
                   labelText: 'E-mail',
+                  border: OutlineInputBorder(),
                 ),
                 controller: emailController,
               ),
@@ -39,6 +40,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               TextField(
                 decoration: const InputDecoration(
                   labelText: 'Hasło',
+                  border: OutlineInputBorder(),
                 ),
                 controller: passwordController,
                 obscureText: true,
@@ -62,6 +64,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             email,
                             password,
                           );
+
                         
                           if (!mounted) return;
                           

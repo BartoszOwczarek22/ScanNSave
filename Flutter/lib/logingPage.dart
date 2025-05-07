@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,19 +19,31 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(isLoadingProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login Page'),
-      ),
-      body: Center(
-        child: Padding(padding: const EdgeInsets.all(16),
+      // appBar: AppBar(
+      //   title: const Text('Login Page'),
+      // ),
+      body: SafeArea(
+        child: 
+          Padding(padding: const EdgeInsets.all(16),
           child: 
           Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            //mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              Spacer(),
+
+              SvgPicture.asset(
+                'assets/icons/logo.svg',
+                colorFilter: ColorFilter.mode(Color.fromARGB(255, 99, 171, 243), BlendMode.srcIn), // <- tutaj ustawiasz kolor
+                width: 110,
+                height: 110,
+              ),
+              const SizedBox(height: 40),
+
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'E-mail',
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -38,6 +51,7 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Hasło',
+                  border: OutlineInputBorder(),
                 ),
                 obscureText: true,
               ),
@@ -105,10 +119,12 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                 },
                 child: const Text('Zarejestruj'),
               ),
+
+               Spacer(),  
             ],
           ),
         )
-      ),
+      )
     );
   }
 }
