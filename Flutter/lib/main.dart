@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:scan_n_save/logingPage.dart';
-import 'package:scan_n_save/registerPage.dart';
-import 'package:scan_n_save/resetPasswordPage.dart';
-import 'package:scan_n_save/verifyPage.dart';
+import 'package:scan_n_save/auth/logingPage.dart';
+import 'package:scan_n_save/auth/registerPage.dart';
+import 'package:scan_n_save/auth/resetPasswordPage.dart';
+import 'package:scan_n_save/auth/verifyPage.dart';
 import 'package:scan_n_save/settings_page.dart';
+import 'package:scan_n_save/providers/auth_providers.dart';
 import 'sharedprefsnotifire.dart';
 
 void main() async {

@@ -1,7 +1,8 @@
-import 'package:scan_n_save/verifyPage.dart';
+import 'package:scan_n_save/auth/verifyPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scan_n_save/providers/auth_providers.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -104,25 +105,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-final isRegisteringProvider = StateProvider<bool>((ref) {
-  return false;
-});
-
-final registerProvider = Provider<RegisterService>((ref) {
-  return RegisterService();
-});
-
-class RegisterService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-
-  Future<void> registerWithEmailAndPassword(String email, String password) async {
-    await _firebaseAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
     );
   }
 }

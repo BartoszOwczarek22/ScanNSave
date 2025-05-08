@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:scan_n_save/services/auth_service.dart';
+import 'package:scan_n_save/providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -119,6 +121,24 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                 },
                 child: const Text('Zarejestruj'),
               ),
+              ElevatedButton.icon(
+                icon: Icon(Icons.login),
+                label: Text('Zaloguj się przez Google'),
+                onPressed: () async {
+                  try {
+                    ref.read(isLoadingProvider.notifier).state = true;
+                    await ref.read(authProvider).signInWithGoogle();
+                    if (!mounted) return;
+                    Navigator.pushReplacementNamed(context, '/home');
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Błąd logowania Google: ${e.message}'))
+                    );
+                  } finally {
+                    ref.read(isLoadingProvider.notifier).state = false;
+                  }
+                },
+              ),
 
                Spacer(),  
             ],
@@ -129,22 +149,4 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-final isLoadingProvider = StateProvider<bool>((ref) {
-  return false;
-});
 
-
-final authProvider = Provider<AuthService>((ref) {
-  return AuthService();
-});
-
-class AuthService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-
-  Future<void> signIn(String email, String password) async {
-    await _firebaseAuth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  }
-}
