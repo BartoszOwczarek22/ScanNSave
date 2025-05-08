@@ -86,12 +86,6 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text('Sprawdź swoją skrzynkę i kliknij w link!'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: checkEmailVerification,
-                      child: const Text('Kliknąłem w link!'),
-                    ),
-                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
@@ -100,7 +94,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                           );
                         }
                       },
-                      child: const Text('Wróć do logowania'),
+                      child: const Text('Wróć do strony logowania'),
                     ),
                   ],
                 ),
