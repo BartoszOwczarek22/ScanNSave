@@ -10,7 +10,7 @@ import 'package:scan_n_save/auth/resetPasswordPage.dart';
 import 'package:scan_n_save/auth/verifyPage.dart';
 import 'package:scan_n_save/settings_page.dart';
 import 'package:scan_n_save/providers/auth_providers.dart';
-import 'sharedprefsnotifire.dart';
+import 'sharedprefsnotifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
