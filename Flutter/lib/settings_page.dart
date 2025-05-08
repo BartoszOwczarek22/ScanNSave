@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'sharedprefsnotifire.dart';
+import 'sharedprefsnotifier.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});

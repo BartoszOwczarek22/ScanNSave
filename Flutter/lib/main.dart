@@ -16,12 +16,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  if (kDebugMode) {
+  /*if (kDebugMode) {
     const String devMachineIP =
         '10.0.2.2'; // Replace with your actual IP address
 
     await FirebaseAuth.instance.useAuthEmulator(devMachineIP, 9099);
-  } 
+  } */
 
   runApp(const ProviderScope(child: MyApp()));
 }

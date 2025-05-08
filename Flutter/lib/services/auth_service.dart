@@ -13,6 +13,7 @@ class AuthService {
   }
 
   Future<void> signInWithGoogle() async{
+    await _googleSignIn.signOut(); //funkcja do ponownego wyboru konta google za kazdym razem
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser == null){
       throw FirebaseAuthException(code: 'ERROR_ABORTED_BY_USER', message: 'Logowanie anulowane');
