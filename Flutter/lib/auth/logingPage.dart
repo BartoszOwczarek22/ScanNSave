@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:scan_n_save/services/auth_service.dart';
 import 'package:scan_n_save/providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -107,8 +106,9 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                             SnackBar(content: Text(message)),
                           );
                         } finally {
-                          ref.read(isLoadingProvider.notifier).state = false;
-                        
+                          if (mounted){
+                            ref.read(isLoadingProvider.notifier).state = false;
+                          }
                         }
                       },
                       child: const Text('Zaloguj'),
@@ -135,7 +135,9 @@ class  _LoginPageState extends ConsumerState<LoginPage> {
                       SnackBar(content: Text('Błąd logowania Google: ${e.message}'))
                     );
                   } finally {
-                    ref.read(isLoadingProvider.notifier).state = false;
+                    if (mounted){
+                       ref.read(isLoadingProvider.notifier).state = false;
+                    }
                   }
                 },
               ),
