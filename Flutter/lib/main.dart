@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,8 +7,7 @@ import 'package:scan_n_save/auth/logingPage.dart';
 import 'package:scan_n_save/auth/registerPage.dart';
 import 'package:scan_n_save/auth/resetPasswordPage.dart';
 import 'package:scan_n_save/auth/verifyPage.dart';
-import 'package:scan_n_save/settings_page.dart';
-import 'package:scan_n_save/providers/auth_providers.dart';
+import 'package:scan_n_save/pages/home_page.dart';
 import 'sharedprefsnotifier.dart';
 
 void main() async {
@@ -31,9 +29,9 @@ class MyApp extends ConsumerWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context,  WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
-    
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -84,54 +82,3 @@ class AuthGate extends StatelessWidget {
   }
 }
 
-class HomePage extends ConsumerStatefulWidget {
-  HomePage({super.key}) {}
-
-  @override
-  ConsumerState<HomePage> createState() => HomePageState();
-}
-
-class HomePageState extends ConsumerState<HomePage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (FirebaseAuth.instance.currentUser?.emailVerified == false) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => EmailVerificationPage()),
-      );
-    }
-  });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Strona główna")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
-            );
-            ref.read(isLoadingProvider.notifier).state = false;
-            ref.read(emailVerificationProvider.notifier).state = false;
-          },
-          child: const Text('wyloguj'),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => SettingsPage()),
-          );
-        },
-        child: const Icon(Icons.settings),
-      ),
-    );
-  }
-}
