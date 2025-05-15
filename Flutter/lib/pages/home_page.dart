@@ -70,6 +70,7 @@ class NotchMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseSize = MediaQuery.of(context).size.shortestSide;
     return Stack(
       children: [
         Positioned(
@@ -99,7 +100,7 @@ class NotchMenu extends StatelessWidget {
                       label: 'Listy',
                       onPressed: () => {},
                     ),
-                    SizedBox(width: 100),
+                    SizedBox(width: baseSize * 0.1),
                     BottomMenuButton(
                       icon: Icons.insert_chart_outlined_rounded,
                       label: 'Statystyki',
@@ -108,7 +109,14 @@ class NotchMenu extends StatelessWidget {
                     BottomMenuButton(
                       icon: Icons.account_circle_outlined,
                       label: 'Konto',
-                      onPressed: () => {},
+                      onPressed: () => {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SettingsPage(),
+                          ),
+                        )
+                      },
                     ),
                   ],
                 ),
@@ -161,12 +169,13 @@ class BottomMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseSize = MediaQuery.of(context).size.shortestSide;
     return TextButton(
       onPressed: onPressed,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 30, color: Color.fromRGBO(70, 70, 70, 1.0),),
+          Icon(icon, size: baseSize * 0.06, color: Color.fromRGBO(70, 70, 70, 1.0),),
           Text(label, style: TextStyle(color: Color.fromRGBO(70, 70, 70, 1.0)),)
         ],
       ),

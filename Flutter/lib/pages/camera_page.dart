@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/providers/camera_providers.dart';
@@ -11,12 +14,11 @@ class CameraPage extends ConsumerStatefulWidget {
 }
 
 class CameraPageState extends ConsumerState<CameraPage> {
-  @override
-  void initState() {}
 
   @override
   Widget build(BuildContext context) {
     final cameraControllerAsync = ref.watch(cameraControllerProvider);
+    final baseSize = MediaQuery.of(context).size.shortestSide;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -25,28 +27,75 @@ class CameraPageState extends ConsumerState<CameraPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: cameraControllerAsync.when(
-        data: (controller) {
-          if (!controller.value.isInitialized) {
+        data: (camState) {
+          if (!(camState.controller?.value.isInitialized ?? true)) {
             return const Center(child: CircularProgressIndicator());
           }
           return Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CameraPreview(controller),
-              Center(
-                child: ElevatedButton(
-                    onPressed: () async {
-                      final controllerNotifier = ref.read(
-                        cameraControllerProvider.notifier,
-                      );
-                      final picture = await controllerNotifier.Capture();
+              CameraPreview(camState.controller!),
+              Expanded(
+                child: Center(
+                  child: camState.isTakingPhoto
+                      ? SizedBox(
+                          
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned(
 
-                      if (picture != null && context.mounted) {}
-                    },
-                    child: const Text('Zrób zdjęcie'),
-                  ),
-              ),
+                                child: SizedBox(
+                                  width: baseSize * 0.15,
+                                  height: baseSize * 0.15,
+                                  child: CircularProgressIndicator(
+                                    value: null,
+                                    color: Colors.white,
+                                    strokeWidth: 5,
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : GestureDetector(
+                        onTap: () {
+                            ref.read(cameraControllerProvider.notifier).Capture().then((value) {
+                              if (value != null) {
+                                //Navigator.pushNamed(context, '/photo-preview', arguments: value);
+                              }
+                            });
+                          },
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 5,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                      
+                    ),
+                ),
+              )
             ],
           );
         },
