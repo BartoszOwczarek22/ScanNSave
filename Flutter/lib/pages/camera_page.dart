@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scan_n_save/pages/receipt_details_page.dart';
 import 'package:scan_n_save/providers/camera_providers.dart';
 
 class CameraPage extends ConsumerStatefulWidget {
@@ -70,7 +71,10 @@ class CameraPageState extends ConsumerState<CameraPage> {
                         onTap: () {
                             ref.read(cameraControllerProvider.notifier).Capture().then((value) {
                               if (value != null) {
-                                //Navigator.pushNamed(context, '/photo-preview', arguments: value);
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ReceiptDetailsPage.fromImage(recieptImagePath: value.path)),
+                                );
                               }
                             });
                           },
