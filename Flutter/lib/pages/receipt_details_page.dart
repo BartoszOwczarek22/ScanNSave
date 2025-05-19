@@ -6,8 +6,12 @@ class ReceiptDetailsPage extends ConsumerWidget {
   Receipt? receipt;
   String? recieptImagePath;
 
-  ReceiptDetailsPage({super.key, required this.receipt}) : recieptImagePath = null;
-  ReceiptDetailsPage.fromImage({super.key, required String this.recieptImagePath}) : receipt = null;
+  ReceiptDetailsPage({super.key, required this.receipt})
+    : recieptImagePath = null;
+  ReceiptDetailsPage.fromImage({
+    super.key,
+    required String this.recieptImagePath,
+  }) : receipt = null;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,7 +19,9 @@ class ReceiptDetailsPage extends ConsumerWidget {
       return buildReceiptView(receipt!);
     }
 
-    final receiptScanning = ref.watch(textRecognitionProvider(recieptImagePath!));
+    final receiptScanning = ref.watch(
+      textRecognitionProvider(recieptImagePath!),
+    );
 
     return receiptScanning.when(
       data: (data) {
@@ -30,12 +36,12 @@ class ReceiptDetailsPage extends ConsumerWidget {
           //   child: Column(
           //     children: [
           //       Text(
-          //         data.blocks[0].text, 
+          //         data.blocks[0].text,
           //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           //       ),
           //       const SizedBox(height: 16),
           //       Text(
-          //         data.blocks[1].text, 
+          //         data.blocks[1].text,
           //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           //       ),
           //     ],
@@ -44,7 +50,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
         );
       },
       error:
-          (error, stackTrace) => Center(child: Text('Error loading receipt')),
+          (error, stackTrace) => Center(child: Text('Error loading receipt ${error.toString()}')),
       loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
@@ -54,8 +60,14 @@ class ReceiptDetailsPage extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Text('Sklep: ${receipt.storeName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Text('Data: ${receipt.date}', style: const TextStyle(color: Colors.grey)),
+          Text(
+            'Sklep: ${receipt.storeName}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            'Data: ${receipt.date}',
+            style: const TextStyle(color: Colors.grey),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: ListView.separated(
@@ -65,6 +77,8 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 final item = receipt.items[index];
                 return ListTile(
                   title: Text(item.name),
+                  // subtitle: Text('Ilość: ${item.quantity} x ${item.price}'),
+                  // trailing: Text('${(item.price)}'),
                   subtitle: Text('Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł'),
                   trailing: Text('${(item.quantity * item.price).toStringAsFixed(2)} zł'),
                 );
@@ -76,7 +90,10 @@ class ReceiptDetailsPage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Suma:', style: TextStyle(fontSize: 18)),
-              Text('${receipt.total.toStringAsFixed(2)} zł', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                '${receipt.total.toStringAsFixed(2)} zł',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ],
@@ -84,5 +101,3 @@ class ReceiptDetailsPage extends ConsumerWidget {
     );
   }
 }
-
-
