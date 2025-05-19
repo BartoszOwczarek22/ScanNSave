@@ -24,13 +24,23 @@ class ReceiptDetailsPage extends ConsumerWidget {
         // receipt = parseReceipt(data);
         return Scaffold(
           appBar: AppBar(title: const Text('Szczegóły paragonu')),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              data,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
+          body: buildReceiptView(data),
+          // Padding(
+          //   padding: const EdgeInsets.all(16.0),
+          //   child: Column(
+          //     children: [
+          //       Text(
+          //         data.blocks[0].text, 
+          //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          //       ),
+          //       const SizedBox(height: 16),
+          //       Text(
+          //         data.blocks[1].text, 
+          //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          //       ),
+          //     ],
+          //   )
+          // ),
         );
       },
       error:
@@ -40,39 +50,36 @@ class ReceiptDetailsPage extends ConsumerWidget {
   }
 
   Widget buildReceiptView(Receipt receipt) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Paragon')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text('Sklep: ${receipt.storeName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text('Data: ${receipt.date}', style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.separated(
-                itemCount: receipt.items.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final item = receipt.items[index];
-                  return ListTile(
-                    title: Text(item.name),
-                    subtitle: Text('Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł'),
-                    trailing: Text('${(item.quantity * item.price).toStringAsFixed(2)} zł'),
-                  );
-                },
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text('Sklep: ${receipt.storeName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Data: ${receipt.date}', style: const TextStyle(color: Colors.grey)),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.separated(
+              itemCount: receipt.items.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final item = receipt.items[index];
+                return ListTile(
+                  title: Text(item.name),
+                  subtitle: Text('Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł'),
+                  trailing: Text('${(item.quantity * item.price).toStringAsFixed(2)} zł'),
+                );
+              },
             ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Suma:', style: TextStyle(fontSize: 18)),
-                Text('${receipt.total.toStringAsFixed(2)} zł', style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ],
-        ),
+          ),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Suma:', style: TextStyle(fontSize: 18)),
+              Text('${receipt.total.toStringAsFixed(2)} zł', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ],
       ),
     );
   }
