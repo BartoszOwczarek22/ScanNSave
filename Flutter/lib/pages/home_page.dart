@@ -5,6 +5,7 @@ import 'package:scan_n_save/auth/verifyPage.dart';
 import 'package:scan_n_save/core/clip_shadow_path.dart';
 import 'package:scan_n_save/pages/camera_page.dart';
 import 'package:scan_n_save/settings_page.dart';
+import 'package:scan_n_save/lists/shopping_lists_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   HomePage({super.key}) {}
@@ -98,7 +99,14 @@ class NotchMenu extends StatelessWidget {
                     BottomMenuButton(
                       icon: Icons.checklist_rtl_rounded,
                       label: 'Listy',
-                      onPressed: () => {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShoppingListsPage(),
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(width: baseSize * 0.1),
                     BottomMenuButton(
