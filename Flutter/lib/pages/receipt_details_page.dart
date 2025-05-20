@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scan_n_save/models/receipt.dart';
 import 'package:scan_n_save/providers/text_recognition_provider.dart';
 
 class ReceiptDetailsPage extends ConsumerWidget {
@@ -50,7 +51,22 @@ class ReceiptDetailsPage extends ConsumerWidget {
         );
       },
       error:
-          (error, stackTrace) => Center(child: Text('Error loading receipt ${error.toString()}')),
+          (error, stackTrace) => Scaffold(
+            body: Center(
+              child: Column(
+                children: 
+                [
+                  Text('${error.toString()}'),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Wróć'),
+                  ),
+                ]
+              )
+            )
+          ),
       loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
