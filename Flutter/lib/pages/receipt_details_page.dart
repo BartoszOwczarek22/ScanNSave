@@ -18,7 +18,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (receipt != null) {
-      return buildReceiptView(receipt!);
+      return buildReceiptView(receipt!, context, ref);
     }
 
     final receiptScanning = ref.watch(
@@ -27,9 +27,6 @@ class ReceiptDetailsPage extends ConsumerWidget {
 
     return receiptScanning.when(
       data: (data) {
-        // Parse the receipt data here
-        // For example, you can create a Receipt object from the scanned text
-        // receipt = parseReceipt(data);
         return Scaffold(
           appBar: AppBar(
             title: const Text('Szczegóły paragonu'),
@@ -44,23 +41,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
               ),
             ],
           ),
-          body: buildReceiptView(data),
-          // Padding(
-          //   padding: const EdgeInsets.all(16.0),
-          //   child: Column(
-          //     children: [
-          //       Text(
-          //         data.blocks[0].text,
-          //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //       ),
-          //       const SizedBox(height: 16),
-          //       Text(
-          //         data.blocks[1].text,
-          //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //       ),
-          //     ],
-          //   )
-          // ),
+          body: buildReceiptView(data, context, ref),
         );
       },
       error:
@@ -68,8 +49,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: 
-                [
+                children: [
                   Text('${error.toString()}'),
                   TextButton(
                     onPressed: () {
@@ -77,26 +57,45 @@ class ReceiptDetailsPage extends ConsumerWidget {
                     },
                     child: const Text('Wróć'),
                   ),
-                ]
-              )
-            )
+                ],
+              ),
+            ),
           ),
       loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
 
-  Widget buildReceiptView(Receipt receipt) {
+  Widget buildReceiptView(Receipt receipt, BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Text(
-            'Sklep: ${receipt.storeName}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            'Data: ${receipt.date}',
-            style: const TextStyle(color: Colors.grey),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    'Sklep: ${receipt.storeName}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Data: ${receipt.date}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+              SizedBox(width: 5),
+              IconButton(
+                onPressed: () {
+                  showEditReceiptDialog(context);
+                },
+                icon: Icon(Icons.edit),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -109,8 +108,12 @@ class ReceiptDetailsPage extends ConsumerWidget {
                   title: Text(item.name),
                   // subtitle: Text('Ilość: ${item.quantity} x ${item.price}'),
                   // trailing: Text('${(item.price)}'),
-                  subtitle: Text('Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł'),
-                  trailing: Text('${(item.quantity * item.price).toStringAsFixed(2)} zł'),
+                  subtitle: Text(
+                    'Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł',
+                  ),
+                  trailing: Text(
+                    '${(item.quantity * item.price).toStringAsFixed(2)} zł',
+                  ),
                 );
               },
             ),
@@ -128,6 +131,47 @@ class ReceiptDetailsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void showEditReceiptDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Edytuj"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Sklep',
+                    border: OutlineInputBorder(),
+                ),),
+                OutlinedButton(
+                  onPressed: () {
+                    showDatePicker(
+                      lastDate: DateTime.now(),
+                      firstDate: DateTime.fromMillisecondsSinceEpoch(0),
+                      context: context
+                    );
+                  },
+                  child: Text("wybierz datę"),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => {Navigator.of(context).pop()},
+                child: Text("Anuluj"),
+              ),
+              TextButton(
+                onPressed: () => {Navigator.of(context).pop()},
+                child: Text("Zapisz"),
+              ),
+            ],
+          ),
     );
   }
 }
