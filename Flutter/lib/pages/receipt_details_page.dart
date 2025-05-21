@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/models/receipt.dart';
 import 'package:scan_n_save/providers/text_recognition_provider.dart';
-import 'package:scan_n_save/services/send_receipt_service.dart';
+import 'package:scan_n_save/api_service.dart';
 
 class ReceiptDetailsPage extends ConsumerWidget {
   Receipt? receipt;
@@ -37,7 +37,8 @@ class ReceiptDetailsPage extends ConsumerWidget {
               TextButton(
                 child: const Text('Zapisz'),
                 onPressed: () {
-                  sendReceiptToServer(data);
+                  ApiService apiService = ApiService();
+                  apiService.sendReceiptToServer(data);
                   Navigator.pop(context);
                 },
               ),
