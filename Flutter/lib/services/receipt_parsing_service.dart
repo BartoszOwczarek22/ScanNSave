@@ -53,6 +53,7 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
                   !recognizedText.blocks[i].lines[j].text.contains("SPRZE") &&
                   !recognizedText.blocks[i].lines[j].text.contains("PTU") &&
                   !recognizedText.blocks[i].lines[j].text.contains("SUMA") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("**") &&
                   !recognizedText.blocks[i].lines[j].text.contains("%")) {
                 itemsPos.add(
                   ReceiptItemPositioned(
@@ -190,12 +191,12 @@ Future<bool> ContainsLeven(String ocrText, List<String> keywords, {int maxDistan
   throw Exception('Nie znaleziono paragonu.');
 }
 Future<int> detectBottom(RecognizedText recognizedText) async {
-  int bottom = -1;
+  int bottom = 10000;
   for (int i = 0; i < recognizedText.blocks.length; i++) {
     for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
       if (recognizedText.blocks[i].lines[j].text.toUpperCase().contains("SP")) {
-        if (recognizedText.blocks[i].lines[j].cornerPoints[0].y > bottom) {
-          if (await ContainsLeven(recognizedText.blocks[i].lines[j].text.toUpperCase(), ["SPRZED"])){
+        if (recognizedText.blocks[i].lines[j].cornerPoints[0].y < bottom) {
+          if (await ContainsLeven(recognizedText.blocks[i].lines[j].text.toUpperCase(), ["SPRZED"], maxDistance: 2)){
             bottom = recognizedText.blocks[i].lines[j].cornerPoints[0].y;
             //i = recognizedText.blocks.length;
             //return bottom;
