@@ -16,45 +16,67 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
     {'store': 'Biedronka', 'date': '12.10.2024', 'price': '435,45 zł'},
   ];
 
-  String? startDate;
-  String? endDate;
+  DateTimeRange? selectedDateRange;
+  String selectedSort = 'Data';
+  bool ascending = false;
 
   List<Map<String, String>> get filteredReceipts {
-    if (startDate == null || endDate == null) return allReceipts;
+    List<Map<String, String>> filtered = allReceipts;
 
-    DateTime start = DateTime.parse(startDate!);
-    DateTime end = DateTime.parse(endDate!);
+    if (selectedDateRange != null) {
+      filtered = filtered.where((r) {
+        final receiptDate =
+            DateTime.parse(r['date']!.split('.').reversed.join());
+        return receiptDate.isAfter(selectedDateRange!.start.subtract(const Duration(days: 1))) &&
+            receiptDate.isBefore(selectedDateRange!.end.add(const Duration(days: 1)));
+      }).toList();
+    }
 
-    return allReceipts.where((r) {
-      final receiptDate = DateTime.parse(r['date']!.split('.').reversed.join());
-      return receiptDate.isAfter(start.subtract(const Duration(days: 1))) &&
-          receiptDate.isBefore(end.add(const Duration(days: 1)));
-    }).toList();
+    filtered.sort((a, b) {
+      int cmp;
+      switch (selectedSort) {
+        case 'Cena':
+          double parsePrice(String price) =>
+              double.tryParse(price.replaceAll(',', '.').replaceAll(' zł', '')) ?? 0;
+          cmp = parsePrice(a['price']!).compareTo(parsePrice(b['price']!));
+          break;
+        case 'Sklep':
+          cmp = a['store']!.compareTo(b['store']!);
+          break;
+        case 'Data':
+        default:
+          final aDate = DateTime.parse(a['date']!.split('.').reversed.join());
+          final bDate = DateTime.parse(b['date']!.split('.').reversed.join());
+          cmp = aDate.compareTo(bDate);
+          break;
+      }
+      return ascending ? cmp : -cmp;
+    });
+
+    return filtered;
   }
 
-  Future<void> pickDate({required bool isStart}) async {
-    DateTime now = DateTime.now();
-    final picked = await showDatePicker(
+  Future<void> pickDateRange() async {
+    DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      initialDate: now,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      lastDate: DateTime.now(),
+      initialDateRange: selectedDateRange,
     );
 
     if (picked != null) {
-      final formatted = '${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}';
       setState(() {
-        if (isStart) {
-          startDate = picked.toIso8601String().split('T').first;
-        } else {
-          endDate = picked.toIso8601String().split('T').first;
-        }
+        selectedDateRange = picked;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final rangeText = selectedDateRange == null
+        ? 'Wybierz zakres dat'
+        : '${formatDate(selectedDateRange!.start)} - ${formatDate(selectedDateRange!.end)}';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historia zakupów'),
@@ -70,17 +92,40 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => pickDate(isStart: true),
-                    child: Text(startDate != null ? 'Od: $startDate' : 'Wybierz datę od'),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.date_range),
+                    onPressed: pickDateRange,
+                    label: Text(rangeText),
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => pickDate(isStart: false),
-                    child: Text(endDate != null ? 'Do: $endDate' : 'Wybierz datę do'),
+                DropdownButton<String>(
+                  value: selectedSort,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedSort = value;
+                      });
+                    }
+                  },
+                  items: ['Data', 'Cena', 'Sklep'].map((option) {
+                    return DropdownMenuItem<String>(
+                      value: option,
+                      child: Text('Sortuj po $option'),
+                    );
+                  }).toList(),
+                ),
+                IconButton(
+                  icon: Icon(
+                    ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: Colors.blue,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      ascending = !ascending;
+                    });
+                  },
+                  tooltip: ascending ? 'Rosnąco' : 'Malejąco',
                 ),
               ],
             ),
@@ -97,9 +142,11 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
                     title: Text(receipt['store']!),
-                    subtitle: Text(formatDate(receipt['date']!)),
-                    trailing: Text(receipt['price']!,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(formatDateString(receipt['date']!)),
+                    trailing: Text(
+                      receipt['price']!,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 );
               },
@@ -107,16 +154,14 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  String formatDate(String date) {
-    // date in format yyyy-MM-dd or dd.MM.yyyy
+  String formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+  }
+
+  String formatDateString(String date) {
     if (date.contains('-')) {
       final parts = date.split('-');
       return '${parts[2]}.${parts[1]}.${parts[0]}';
