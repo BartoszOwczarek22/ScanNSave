@@ -102,12 +102,29 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
 }
 
 (double, double, productType) parsePriceQuantity(String text) {
-  final parts = text.split('x');
+  text = text.replaceAll(' ', '');
+  String wynik = text.replaceAllMapped(RegExp(r'[a-zA-Z]+'), (match) {
+    String found = match.group(0)!;
+    if (found == 'x' || found == 'szt') {
+      return found;
+    }
+    return ''; // usuń
+  });
+  text = wynik;
+  var parts = text.split('x');
+  if (parts.length == 1) {
+    parts = text.split('szt');
+  } 
   
   if (parts.length == 2) {
     final quantity = double.tryParse(parts[0].trim().replaceAll(',', '.'));
-    final parts2 = parts[1].split(' ');
-    final price = double.tryParse(parts2[0].trim().replaceAll(',', '.'));
+    //final parts2 = parts[1].split(' ');
+    var secondPart = parts[1].replaceAll(',', '.');
+    RegExp regex = RegExp(r'\d+\.\d{2}');
+    Match? match = regex.firstMatch(secondPart);
+    String priceString = match?.group(0) ?? '';
+
+    final price = double.tryParse(priceString);
     if (quantity != null && price != null) {
       if (quantity % 1 == 0) {
         return (quantity, price, productType.perPiece);
