@@ -5,8 +5,14 @@ class Receipt {
   final double total;
 
   Receipt({required this.storeName, required this.date, required this.items})
-    : total = 0.0;
-  //: total = items.fold(0, (sum, item) => sum + item.price * item.quantity);
+  : total = items.fold(0, (sum, item) => sum + item.price * item.quantity);
+
+  Map<String, dynamic> toJson() => {
+    'storeName': storeName,
+    'date': date,
+    'items': items.map((item) => item.toJson()).toList(),
+    'total': total,
+  };
 }
 enum productType {
   perPiece,
@@ -24,4 +30,15 @@ class ReceiptItem {
     required this.price,
     required this.type,
   });
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'type': productTypeToString(type),
+    'quantity': quantity,
+    'price': price,
+  };
+}
+
+String productTypeToString(productType type) {
+  return type.toString().split('.').last;
 }

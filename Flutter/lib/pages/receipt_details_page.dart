@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/models/receipt.dart';
 import 'package:scan_n_save/providers/text_recognition_provider.dart';
+import 'package:scan_n_save/services/send_receipt_service.dart';
 
 class ReceiptDetailsPage extends ConsumerWidget {
   Receipt? receipt;
@@ -30,7 +31,18 @@ class ReceiptDetailsPage extends ConsumerWidget {
         // For example, you can create a Receipt object from the scanned text
         // receipt = parseReceipt(data);
         return Scaffold(
-          appBar: AppBar(title: const Text('Szczegóły paragonu')),
+          appBar: AppBar(
+            title: const Text('Szczegóły paragonu'),
+            actions: [
+              TextButton(
+                child: const Text('Zapisz'),
+                onPressed: () {
+                  sendReceiptToServer(data);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
           body: buildReceiptView(data),
           // Padding(
           //   padding: const EdgeInsets.all(16.0),

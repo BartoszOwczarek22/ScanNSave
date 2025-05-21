@@ -45,6 +45,7 @@ dependencies:
   permission_handler: ^11.4.0
   google_mlkit_text_recognition: ^0.15.0
   dart_levenshtein: ^1.0.1
+  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:
