@@ -25,21 +25,22 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
   int bottom = -1;
   int left = -1;
   int right = -1;
-  for (int i = 0; i < recognizedText.blocks.length; i++) {
-    if (recognizedText.blocks[i].text.contains('PARAGON FISKALNY')) {
-      for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
-        if (recognizedText.blocks[i].lines[j].text.contains(
-          'PARAGON FISKALNY',
-        )) {
-          top = recognizedText.blocks[i].lines[j].cornerPoints[3].y;
-          left = recognizedText.blocks[i].lines[j].cornerPoints[3].x;
-          right = recognizedText.blocks[i].lines[j].cornerPoints[2].x;
-          break;
-        }
-      }
-      break;
-    }
-  }
+  (top, left, right) = detectTop(recognizedText);
+  // for (int i = 0; i < recognizedText.blocks.length; i++) {
+  //   if (recognizedText.blocks[i].text.contains('PARAGON FISKALNY')) {
+  //     for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
+  //       if (recognizedText.blocks[i].lines[j].text.contains(
+  //         'PARAGON FISKALNY',
+  //       )) {
+  //         top = recognizedText.blocks[i].lines[j].cornerPoints[3].y;
+  //         left = recognizedText.blocks[i].lines[j].cornerPoints[3].x;
+  //         right = recognizedText.blocks[i].lines[j].cornerPoints[2].x;
+  //         break;
+  //       }
+  //     }
+  //     break;
+  //   }
+  // }
   if (top == -1) {
     throw Exception('Nie znaleziono paragonu.');
   }
@@ -153,6 +154,45 @@ Future<bool> ContainsLeven(String ocrText, List<String> keywords, {int maxDistan
     }
   }
   return false;
+}
+
+(int, int, int) detectTop(RecognizedText recognizedText){
+  bool parFound = false;
+  int top = -1;
+  int left = -1;
+  int right = -1;
+  for (int i = 0; i < recognizedText.blocks.length; i++) {
+    for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
+      if (recognizedText.blocks[i].lines[j].text.toUpperCase().replaceAll(' ', '').
+      contains('PARAGON')) {
+        parFound = true;
+        top = recognizedText.blocks[i].lines[j].cornerPoints[3].y;
+        left = recognizedText.blocks[i].lines[j].cornerPoints[3].x;
+        i = recognizedText.blocks.length;
+        break;
+      }
+    }
+  }
+  if (!parFound) {
+    throw Exception('Nie znaleziono paragonu.');
+  }
+  bool fiskalnyFound = false;
+  for (int i = 0; i < recognizedText.blocks.length; i++) {
+    for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
+      if (recognizedText.blocks[i].lines[j].text.toUpperCase().replaceAll(' ', '').
+      contains("FISKALNY")) {
+        fiskalnyFound = true;
+        right = recognizedText.blocks[i].lines[j].cornerPoints[2].x;
+        i = recognizedText.blocks.length;
+        break;
+      }
+    }
+  }
+  if (!fiskalnyFound) {
+    throw Exception('Nie znaleziono paragonu.');
+  }
+
+  return (top, left, right);
 }
 
 String detectStoreName(String ocrText) {

@@ -54,6 +54,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
           (error, stackTrace) => Scaffold(
             body: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: 
                 [
                   Text('${error.toString()}'),
