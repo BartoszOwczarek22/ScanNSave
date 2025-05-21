@@ -51,6 +51,8 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
               if (!recognizedText.blocks[i].lines[j].text.contains(":") &&
                   !recognizedText.blocks[i].lines[j].text.contains("PARAGON") &&
                   !recognizedText.blocks[i].lines[j].text.contains("SPRZE") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("PTU") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("SUMA") &&
                   !recognizedText.blocks[i].lines[j].text.contains("%")) {
                 itemsPos.add(
                   ReceiptItemPositioned(

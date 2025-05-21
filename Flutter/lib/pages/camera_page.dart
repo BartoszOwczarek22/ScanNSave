@@ -15,7 +15,6 @@ class CameraPage extends ConsumerStatefulWidget {
 }
 
 class CameraPageState extends ConsumerState<CameraPage> {
-
   @override
   Widget build(BuildContext context) {
     final cameraControllerAsync = ref.watch(cameraControllerProvider);
@@ -32,75 +31,84 @@ class CameraPageState extends ConsumerState<CameraPage> {
           if (!(camState.controller?.value.isInitialized ?? true)) {
             return const Center(child: CircularProgressIndicator());
           }
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CameraPreview(camState.controller!),
-              Expanded(
-                child: Center(
-                  child: camState.isTakingPhoto
-                      ? SizedBox(
-                          
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Positioned(
-
-                                child: SizedBox(
-                                  width: baseSize * 0.15,
-                                  height: baseSize * 0.15,
-                                  child: CircularProgressIndicator(
-                                    value: null,
-                                    color: Colors.white,
-                                    strokeWidth: 5,
+          return SizedBox.expand(
+            child: Stack(
+              children: [
+                CameraPreview(camState.controller!),
+                Positioned(
+                  bottom: 15,
+                  left: 0,
+                  right: 0,
+                  child:
+                      camState.isTakingPhoto
+                          ? SizedBox(
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned(
+                                  child: SizedBox(
+                                    width: baseSize * 0.15,
+                                    height: baseSize * 0.15,
+                                    child: CircularProgressIndicator(
+                                      value: null,
+                                      color: Colors.white,
+                                      strokeWidth: 5,
+                                    ),
                                   ),
                                 ),
+                                Center(
+                                  child: Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : GestureDetector(
+                            onTap: () {
+                              ref
+                                  .read(cameraControllerProvider.notifier)
+                                  .Capture()
+                                  .then((value) {
+                                    if (value != null) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  ReceiptDetailsPage.fromImage(
+                                                    recieptImagePath:
+                                                        value.path,
+                                                  ),
+                                        ),
+                                      );
+                                    }
+                                  });
+                            },
+                            child: Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 5,
+                                ),
                               ),
-                              Center(
+                              child: const Center(
                                 child: Icon(
                                   Icons.camera_alt,
                                   color: Colors.white,
                                   size: 40,
                                 ),
                               ),
-                            ],
-                          ),
-                        )
-                      : GestureDetector(
-                        onTap: () {
-                            ref.read(cameraControllerProvider.notifier).Capture().then((value) {
-                              if (value != null) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => ReceiptDetailsPage.fromImage(recieptImagePath: value.path)),
-                                );
-                              }
-                            });
-                          },
-                        child: Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 5,
                             ),
                           ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 40,
-                            ),
-                          ),
-                        ),
-                      
-                    ),
                 ),
-              )
-            ],
+              ],
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
