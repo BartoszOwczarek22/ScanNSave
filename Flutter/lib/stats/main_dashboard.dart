@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:scan_n_save/pages/camera_page.dart';
 
 class ExpenseStatisticsScreen extends StatefulWidget {
   const ExpenseStatisticsScreen({Key? key}) : super(key: key);
@@ -308,7 +309,7 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
   }
 
   Widget _buildLegend(List<ExpenseCategory> data) {
-    // Sort data by amount descending for the legend
+  // Sortowanie danych
     final sortedData = [...data]..sort((a, b) => b.amount.compareTo(a.amount));
     
     return Padding(
@@ -415,8 +416,12 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
             ),
             FilledButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                // Here you would implement camera functionality
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CameraPage(),
+                    ),
+                  );
               },
               child: const Text('Skanuj'),
             ),
