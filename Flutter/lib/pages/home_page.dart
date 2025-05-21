@@ -8,6 +8,7 @@ import 'package:scan_n_save/pages/camera_page.dart';
 import 'package:scan_n_save/settings_page.dart';
 import 'package:scan_n_save/lists/shopping_lists_page.dart';
 import 'package:scan_n_save/pages/receipt_history_page.dart';
+import 'package:scan_n_save/stats/main_dashboard.dart';
 
 // Sample data - just for MVP
 
@@ -437,7 +438,14 @@ class NotchMenu extends StatelessWidget {
                   BottomMenuButton(
                     icon: Icons.insert_chart_outlined_rounded,
                     label: 'Statystyki',
-                    onPressed: () => {},
+                    onPressed: () => {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ExpenseStatisticsScreen()
+                        ),
+                      )
+                    },
                   ),
                   BottomMenuButton(
                     icon: Icons.account_circle_outlined,
