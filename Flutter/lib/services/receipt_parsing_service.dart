@@ -25,46 +25,22 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
   int bottom = -1;
   int left = -1;
   int right = -1;
+  print("detecting top");
   (top, left, right) = detectTop(recognizedText);
-  // for (int i = 0; i < recognizedText.blocks.length; i++) {
-  //   if (recognizedText.blocks[i].text.contains('PARAGON FISKALNY')) {
-  //     for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
-  //       if (recognizedText.blocks[i].lines[j].text.contains(
-  //         'PARAGON FISKALNY',
-  //       )) {
-  //         top = recognizedText.blocks[i].lines[j].cornerPoints[3].y;
-  //         left = recognizedText.blocks[i].lines[j].cornerPoints[3].x;
-  //         right = recognizedText.blocks[i].lines[j].cornerPoints[2].x;
-  //         break;
-  //       }
-  //     }
-  //     break;
-  //   }
-  // }
-  if (top == -1) {
-    throw Exception('Nie znaleziono paragonu.');
-  }
-  for (int i = 0; i < recognizedText.blocks.length; i++) {
-    if (recognizedText.blocks[i].text.toUpperCase().contains(RegExp("SPR[ZE][EDŁL]"))) {
-      for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
-        if (recognizedText.blocks[i].lines[j].text.toUpperCase().contains(
-          "SPRZED",
-        )) {
-          bottom = recognizedText.blocks[i].cornerPoints[0].y;
-          break;
-        }
-      }
-      break;
-    }
-  }
-  if (bottom == -1) {
-    throw Exception('Nie znaleziono paragonu.');
-  }
+  print("top detected");
+  print("detecting bottom");
+  bottom = await detectBottom(recognizedText);
+  print("bottom detected");
 
   final itemsPos = <ReceiptItemPositioned>[];
+  print("detecting store name");
   String storeName = detectStoreName(recognizedText.text);
-  String date = 'Brak daty';
+  print("store name detected");
+  print("detecting date");
+  String date = detectDate(recognizedText.text);
+  print("date detected");
 
+  print("parsing items");
   for (int i = 0; i < recognizedText.blocks.length; i++) {
     if (recognizedText.blocks[i].cornerPoints[3].y > top &&
         recognizedText.blocks[i].cornerPoints[0].y < bottom) {
@@ -72,7 +48,10 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
         if (recognizedText.blocks[i].lines[j].text.length > 1) {
           if (recognizedText.blocks[i].lines[j].cornerPoints[0].x < left) {
             if (recognizedText.blocks[i].lines[j].cornerPoints[1].x < right) {
-              //if (!recognizedText.blocks[i].lines[j].text.contains(":")) {
+              if (!recognizedText.blocks[i].lines[j].text.contains(":") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("PARAGON") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("SPRZE") &&
+                  !recognizedText.blocks[i].lines[j].text.contains("%")) {
                 itemsPos.add(
                   ReceiptItemPositioned(
                     line: recognizedText.blocks[i].lines[j],
@@ -83,6 +62,7 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
                   ),
                 );
               }
+            }
             //} else {
               //throw Exception('Jakiś dziwny paragon.');
             //}
@@ -113,6 +93,7 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
       }
     }
   }
+  print("items parsed");
   return Receipt(
     storeName: storeName,
     date: date,
@@ -122,6 +103,7 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
 
 (double, double, productType) parsePriceQuantity(String text) {
   final parts = text.split('x');
+  
   if (parts.length == 2) {
     final quantity = double.tryParse(parts[0].trim().replaceAll(',', '.'));
     final parts2 = parts[1].split(' ');
@@ -146,7 +128,7 @@ Future<bool> ContainsLeven(String ocrText, List<String> keywords, {int maxDistan
 
   for (final keyword in keywords) {
     for (final word in wordsInText) {
-      final distance = await isSimilar(word, keyword);
+      final distance = await isSimilar(word, keyword, maxDistance: maxDistance);
       if (distance) {
         return true;
       }
@@ -176,30 +158,43 @@ Future<bool> ContainsLeven(String ocrText, List<String> keywords, {int maxDistan
   if (!parFound) {
     throw Exception('Nie znaleziono paragonu.');
   }
-  bool fiskalnyFound = false;
   for (int i = 0; i < recognizedText.blocks.length; i++) {
     for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
       if (recognizedText.blocks[i].lines[j].text.toUpperCase().replaceAll(' ', '').
       contains("FISKALNY")) {
-        fiskalnyFound = true;
         right = recognizedText.blocks[i].lines[j].cornerPoints[2].x;
-        i = recognizedText.blocks.length;
-        break;
+        return (top, left, right);
       }
     }
   }
-  if (!fiskalnyFound) {
-    throw Exception('Nie znaleziono paragonu.');
+  
+  throw Exception('Nie znaleziono paragonu.');
+}
+Future<int> detectBottom(RecognizedText recognizedText) async {
+  int bottom = -1;
+  for (int i = 0; i < recognizedText.blocks.length; i++) {
+    for (int j = 0; j < recognizedText.blocks[i].lines.length; j++) {
+      if (recognizedText.blocks[i].lines[j].text.toUpperCase().contains("SP")) {
+        if (recognizedText.blocks[i].lines[j].cornerPoints[0].y > bottom) {
+          if (await ContainsLeven(recognizedText.blocks[i].lines[j].text.toUpperCase(), ["SPRZED"])){
+            bottom = recognizedText.blocks[i].lines[j].cornerPoints[0].y;
+            //i = recognizedText.blocks.length;
+            //return bottom;
+          }
+        }
+      }
+    }
   }
-
-  return (top, left, right);
+  if (bottom != -1) {
+    return bottom;
+  }
+  throw Exception('Nie znaleziono paragonu.');
 }
 
 String detectStoreName(String ocrText) {
   final keywords = [
     'biedronka',
     'lidl',
-    'tesco',
     'carrefour',
     'żabka',
     'stokrotka',
@@ -222,4 +217,15 @@ String detectStoreName(String ocrText) {
     }
   }
   return 'Nieznany sklep';
+}
+String detectDate(String ocrText) {
+  final textPre = ocrText.replaceAll(' ', '');
+  RegExp regex = RegExp(r'2\d{3}-[01][0-9]-[0-3][0-9]');
+  Iterable<RegExpMatch> matches = regex.allMatches(textPre);
+
+  if (matches.isNotEmpty) {
+    return matches.first.group(0) ?? 'Brak daty';
+  } else {
+    return 'Brak daty';
+  }
 }
