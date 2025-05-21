@@ -6,6 +6,7 @@ import 'package:scan_n_save/core/clip_shadow_path.dart';
 import 'package:scan_n_save/pages/camera_page.dart';
 import 'package:scan_n_save/settings_page.dart';
 import 'package:scan_n_save/lists/shopping_lists_page.dart';
+import 'package:scan_n_save/pages/receipt_history_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   HomePage({super.key}) {}
@@ -93,8 +94,15 @@ class NotchMenu extends StatelessWidget {
                   children: [
                     BottomMenuButton(
                       icon: Icons.shopping_cart_outlined,
-                      label: 'Histoiria',
-                      onPressed: () => {},
+                      label: 'Historia',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReceiptHistoryPage(), 
+                          ),
+                        );
+                      },
                     ),
                     BottomMenuButton(
                       icon: Icons.checklist_rtl_rounded,
