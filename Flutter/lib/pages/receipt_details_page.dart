@@ -56,13 +56,11 @@ class ReceiptScanningPage extends ConsumerWidget {
 
 
 class ReceiptDetailsPage extends ConsumerWidget {
-  //Receipt? receipt;
   String? recieptImagePath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receipt = ref.watch(receiptProvider);
-    final receiptNotifier = ref.watch(receiptProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -79,6 +77,38 @@ class ReceiptDetailsPage extends ConsumerWidget {
         ],
       ),
       body: buildReceiptView(receipt, context, ref),
+      bottomNavigationBar: BottomAppBar(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text('Suma:', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${receipt.total.toStringAsFixed(2)} zł',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Dodaj produkt'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  textStyle: const TextStyle(fontSize: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  showAddItemDialog(context, ref);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -110,7 +140,8 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 onPressed: () {
                   showEditReceiptDialog(context, ref, receipt.storeName, receipt.date ?? "brak");
                 },
-                icon: Icon(Icons.edit),
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                tooltip: 'Edytuj produkt',
               ),
             ],
           ),
@@ -123,29 +154,29 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 final item = receipt.items[index];
                 return ListTile(
                   title: Text(item.name),
-                  // subtitle: Text('Ilość: ${item.quantity} x ${item.price}'),
-                  // trailing: Text('${(item.price)}'),
                   subtitle: Text(
                     'Ilość: ${item.quantity} x ${item.price.toStringAsFixed(2)} zł',
                   ),
-                  trailing: Text(
-                    '${(item.quantity * item.price).toStringAsFixed(2)} zł',
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${(item.quantity * item.price).toStringAsFixed(2)} zł',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        tooltip: 'Edytuj produkt',
+                        onPressed: () {
+                          showEditItemDialog(context, ref, item, index);
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
             ),
           ),
           const Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Suma:', style: TextStyle(fontSize: 18)),
-              Text(
-                '${receipt.total.toStringAsFixed(2)} zł',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -201,6 +232,126 @@ class ReceiptDetailsPage extends ConsumerWidget {
               ),
             ],
           ),
+    );
+  }
+
+  void showAddItemDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final quantityController = TextEditingController(text: "1");
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Dodaj produkt"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Nazwa produktu"),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(labelText: "Cena (zł)"),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: quantityController,
+              decoration: const InputDecoration(labelText: "Ilość"),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Anuluj"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final price = double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
+              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.')) ?? 1.0;
+
+              if (name.isNotEmpty && price > 0 && quantity > 0) {
+                ref.read(receiptProvider.notifier).addItem(
+                  ReceiptItem(
+                    name: name,
+                    price: price,
+                    quantity: quantity,
+                    type: productType.perPiece,
+                  ),
+                );
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text("Dodaj"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showEditItemDialog(BuildContext context, WidgetRef ref, ReceiptItem item, int index) {
+    final nameController = TextEditingController(text: item.name);
+    final priceController = TextEditingController(text: item.price.toString());
+    final quantityController = TextEditingController(text: item.quantity.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edytuj produkt"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Nazwa produktu"),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(labelText: "Cena za sztukę (zł)"),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: quantityController,
+              decoration: const InputDecoration(labelText: "Ilość"),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Anuluj"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final price = double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
+              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.')) ?? 1.0;
+
+              if (name.isNotEmpty && price > 0 && quantity > 0) {
+                ref.read(receiptProvider.notifier).updateItem(
+                  index,
+                  item.copyWith(
+                    name: name,
+                    price: price,
+                    quantity: quantity,
+                  ),
+                );
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text("Zapisz"),
+          ),
+        ],
+      ),
     );
   }
 }
