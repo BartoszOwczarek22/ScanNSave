@@ -89,14 +89,6 @@ class HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: SvgPicture.asset('assets/icons/logo.svg', colorFilter: ColorFilter.mode(Color.fromARGB(255, 99, 171, 243), BlendMode.srcIn),height: 30,),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Zaimplementować funkcje wyszukiwania 
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
