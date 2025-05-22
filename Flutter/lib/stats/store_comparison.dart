@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scan_n_save/pages/home_page.dart';
 
 class PriceComparisonScreen extends StatefulWidget{
   const PriceComparisonScreen({Key? key}) : super(key: key);
@@ -116,7 +117,7 @@ class _PriceComparisonScreenState extends State<PriceComparisonScreen> with Tick
     Widget build(BuildContext context) {
       return Scaffold(
         appBar: AppBar(
-          leading: IconButton(onPressed: (){Navigator.of(context).pop();}, icon: const Icon(Icons.arrow_back)),
+          leading: IconButton(onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));}, icon: const Icon(Icons.arrow_back)),
           title: const Text('Porównywarka cen'),
           bottom: TabBar(
             controller: _tabController,
@@ -390,7 +391,7 @@ class _PriceComparisonScreenState extends State<PriceComparisonScreen> with Tick
                             _getTimeAgo(storePrice.lastUpdated),
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.grey,
+                              color: Colors.grey
                             ),
                           ),
                         ],

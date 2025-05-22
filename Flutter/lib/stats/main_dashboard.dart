@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:scan_n_save/pages/camera_page.dart';
+import 'package:scan_n_save/pages/home_page.dart';
 
 class ExpenseStatisticsScreen extends StatefulWidget {
   const ExpenseStatisticsScreen({Key? key}) : super(key: key);
@@ -50,15 +51,6 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statystyki wydatków'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.camera_alt),
-            onPressed: () {
-              _showScanReceiptDialog();
-            },
-            tooltip: 'Zeskanuj paragon',
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -85,13 +77,7 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showScanReceiptDialog();
-        },
-        child: const Icon(Icons.add_a_photo),
-        tooltip: 'Zeskanuj nowy paragon',
-      ),
+
     );
   }
 
@@ -400,36 +386,6 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
     );
   }
 
-  void _showScanReceiptDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Zeskanuj paragon'),
-          content: const Text('Chciałbyś zeskanować nowy paragon?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Anuluj'),
-            ),
-            FilledButton(
-              onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CameraPage(),
-                    ),
-                  );
-              },
-              child: const Text('Skanuj'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class ExpenseCategory {

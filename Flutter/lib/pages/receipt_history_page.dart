@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:scan_n_save/pages/home_page.dart';
+import 'package:scan_n_save/pages/camera_page.dart';
 
 class ReceiptHistoryPage extends StatefulWidget {
   const ReceiptHistoryPage({super.key});
@@ -154,6 +156,13 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showScanReceiptDialog();
+        },
+        child: const Icon(Icons.add_a_photo),
+        tooltip: 'Zeskanuj nowy paragon',
+      ),
     );
   }
 
@@ -167,5 +176,37 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
       return '${parts[2]}.${parts[1]}.${parts[0]}';
     }
     return date;
+  }
+
+  
+  void _showScanReceiptDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Zeskanuj paragon'),
+          content: const Text('Chciałbyś zeskanować nowy paragon?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CameraPage(),
+                    ),
+                  );
+              },
+              child: const Text('Skanuj'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
