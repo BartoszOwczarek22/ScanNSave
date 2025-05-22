@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scan_n_save/pages/home_page.dart';
 
 class ShoppingListsPage extends StatelessWidget {
   const ShoppingListsPage({Key? key}) : super(key: key);
@@ -15,6 +16,10 @@ class ShoppingListsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twoje listy zakupów'),
+          leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => HomePage()), ),
+        )
       ),
       body: ListView.builder(
         itemCount: shoppingLists.length,

@@ -10,6 +10,7 @@ import 'package:scan_n_save/lists/shopping_lists_page.dart';
 import 'package:scan_n_save/pages/receipt_history_page.dart';
 import 'package:scan_n_save/stats/main_dashboard.dart';
 import 'package:scan_n_save/stats/store_comparison.dart';
+import 'package:scan_n_save/sharedprefsnotifier.dart';
 
 // Sample data - just for MVP
 
@@ -237,7 +238,9 @@ class HomePageState extends ConsumerState<HomePage> {
                 ),
                 if (onSeeAll != null)
                   TextButton(
-                    onPressed: () {        Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => PriceComparisonScreen()), );},
+                    onPressed: () { if (title == "Porównywarka cen"){Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => PriceComparisonScreen()), );} else {
+                      Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => ShoppingListsPage()), );
+                    }},
                     child: Row(
                       children: const [
                         Text('Sprawdź', style: TextStyle(color: Color.fromRGBO(99, 171, 243, 1.0))),
@@ -314,6 +317,8 @@ class HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildComparisonItem(Map<String, dynamic> item) {
+    final themeMode = ref.watch(themeNotifierProvider);
+    final isDark = themeMode == ThemeMode.dark;
 
     int bestPriceIndex = 0;
     double lowestPrice = double.maxFinite;
@@ -348,14 +353,14 @@ class HomePageState extends ConsumerState<HomePage> {
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9F9F9),
+                    color: isDark ? Colors.grey[700] : Color(0xFFF9F9F9),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     children: [
                       Text(
                         store['name'],
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white :  Colors.grey),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
@@ -363,7 +368,7 @@ class HomePageState extends ConsumerState<HomePage> {
                         store['price'],
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: idx == bestPriceIndex ? Colors.green : Colors.black,
+                          color: idx == bestPriceIndex ? Colors.green : isDark ? Colors.white : Colors.black,
                         ),
                       ),
                     ],
