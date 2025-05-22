@@ -1,67 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/models/receipt.dart';
+import 'package:scan_n_save/providers/receipt_details_provider.dart';
 import 'package:scan_n_save/providers/text_recognition_provider.dart';
 import 'package:scan_n_save/api_service.dart';
 
-class ReceiptDetailsPage extends ConsumerWidget {
-  Receipt? receipt;
+class ReceiptScanningPage extends ConsumerWidget {
   String? recieptImagePath;
 
-  ReceiptDetailsPage({super.key, required this.receipt})
-    : recieptImagePath = null;
-  ReceiptDetailsPage.fromImage({
+  ReceiptScanningPage({
     super.key,
     required String this.recieptImagePath,
-  }) : receipt = null;
+  });
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final receiptAsync = ref.watch(textRecognitionProvider(recieptImagePath!));
+
+    return receiptAsync.when(
+      loading: () => Scaffold(body:Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Padding(padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Nie znaleziono paragonu.'),
+                SizedBox(height: 20),
+                Text("Upewnij się, że oświetlenie jest dobre, na zdjęciu jest cały paragon oraz zdjęcie robisz od góry.",
+                  textAlign: TextAlign.center,
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Wróć'),
+                ),
+              ],
+            ),
+          )
+        ),
+      ),
+      data: (receipt) {
+        return ProviderScope(
+          overrides: [
+            receiptProvider.overrideWith(
+              (ref) => ReceiptNotifier(receipt),
+            ),
+          ],
+          child: ReceiptDetailsPage(),
+        );
+      },
+    );
+  }
+}
+
+
+class ReceiptDetailsPage extends ConsumerWidget {
+  //Receipt? receipt;
+  String? recieptImagePath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (receipt != null) {
-      return buildReceiptView(receipt!, context, ref);
-    }
+    final receipt = ref.watch(receiptProvider);
+    final receiptNotifier = ref.watch(receiptProvider.notifier);
 
-    final receiptScanning = ref.watch(
-      textRecognitionProvider(recieptImagePath!),
-    );
-
-    return receiptScanning.when(
-      data: (data) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Szczegóły paragonu'),
-            actions: [
-              TextButton(
-                child: const Text('Zapisz'),
-                onPressed: () {
-                  ApiService apiService = ApiService();
-                  apiService.sendReceiptToServer(data);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Szczegóły paragonu'),
+        actions: [
+          TextButton(
+            child: const Text('Zapisz'),
+            onPressed: () {
+              ApiService apiService = ApiService();
+              apiService.sendReceiptToServer(receipt);
+              Navigator.pop(context);
+            },
           ),
-          body: buildReceiptView(data, context, ref),
-        );
-      },
-      error:
-          (error, stackTrace) => Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('${error.toString()}'),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Wróć'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      loading: () => const Center(child: CircularProgressIndicator()),
+        ],
+      ),
+      body: buildReceiptView(receipt, context, ref),
     );
   }
 
@@ -91,7 +108,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
               SizedBox(width: 5),
               IconButton(
                 onPressed: () {
-                  showEditReceiptDialog(context);
+                  showEditReceiptDialog(context, ref, receipt.storeName, receipt.date ?? "brak");
                 },
                 icon: Icon(Icons.edit),
               ),
@@ -134,7 +151,10 @@ class ReceiptDetailsPage extends ConsumerWidget {
     );
   }
 
-  void showEditReceiptDialog(BuildContext context) {
+  void showEditReceiptDialog(BuildContext context, WidgetRef ref, String storeName, String date) {
+    TextEditingController storeNameInputControler = TextEditingController();
+    storeNameInputControler.text = storeName;
+    DateTime? pickedDate;
     showDialog(
       context: context,
       builder:
@@ -145,16 +165,18 @@ class ReceiptDetailsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
+                  controller: storeNameInputControler,
                   decoration: const InputDecoration(
                     labelText: 'Sklep',
                     border: OutlineInputBorder(),
                 ),),
                 OutlinedButton(
-                  onPressed: () {
-                    showDatePicker(
+                  onPressed: () async {
+                    pickedDate = await showDatePicker(
                       lastDate: DateTime.now(),
                       firstDate: DateTime.fromMillisecondsSinceEpoch(0),
                       context: context
+                      
                     );
                   },
                   child: Text("wybierz datę"),
@@ -167,7 +189,14 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 child: Text("Anuluj"),
               ),
               TextButton(
-                onPressed: () => {Navigator.of(context).pop()},
+                onPressed: () {
+                  ref.read(receiptProvider.notifier).udateStoreName(storeNameInputControler.text);
+                  if (pickedDate != null)
+                  {
+                    ref.read(receiptProvider.notifier).updateDate("${pickedDate!.year}-${pickedDate!.month}-${pickedDate!.day}");
+                  }
+                  Navigator.of(context).pop();
+                },
                 child: Text("Zapisz"),
               ),
             ],

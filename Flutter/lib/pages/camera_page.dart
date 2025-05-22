@@ -77,7 +77,7 @@ class CameraPageState extends ConsumerState<CameraPage> {
                                         MaterialPageRoute(
                                           builder:
                                               (context) =>
-                                                  ReceiptDetailsPage.fromImage(
+                                                  ReceiptScanningPage(
                                                     recieptImagePath:
                                                         value.path,
                                                   ),

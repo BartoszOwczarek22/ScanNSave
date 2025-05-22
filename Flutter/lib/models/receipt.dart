@@ -13,6 +13,17 @@ class Receipt {
     'items': items.map((item) => item.toJson()).toList(),
     'total': total,
   };
+  Receipt copyWith({
+    String? storeName,
+    String? date,
+    List<ReceiptItem>? items,
+  }) {
+    return Receipt(
+      storeName: storeName ?? this.storeName,
+      date: date ?? this.date,
+      items: items ?? this.items,
+    );
+  }
 }
 enum productType {
   perPiece,
@@ -37,6 +48,19 @@ class ReceiptItem {
     'quantity': quantity,
     'price': price,
   };
+  ReceiptItem copyWith({
+    String? name,
+    double? quantity,
+    double? price,
+    productType? type,
+  }) {
+    return ReceiptItem(
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      price: price ?? this.price,
+      type: type ?? this.type,
+    );
+  }
 }
 
 String productTypeToString(productType type) {
