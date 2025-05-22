@@ -242,7 +242,7 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${totalExpense/15} zł', // Mock average calculation
+                      '${(totalExpense/15).toStringAsFixed(2)} zł', // Mock average calculation
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
