@@ -9,6 +9,7 @@ import 'package:scan_n_save/settings_page.dart';
 import 'package:scan_n_save/lists/shopping_lists_page.dart';
 import 'package:scan_n_save/pages/receipt_history_page.dart';
 import 'package:scan_n_save/stats/main_dashboard.dart';
+import 'package:scan_n_save/stats/store_comparison.dart';
 
 // Sample data - just for MVP
 
@@ -244,7 +245,7 @@ class HomePageState extends ConsumerState<HomePage> {
                 ),
                 if (onSeeAll != null)
                   TextButton(
-                    onPressed: onSeeAll,
+                    onPressed: () {        Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => PriceComparisonScreen()), );},
                     child: Row(
                       children: const [
                         Text('Sprawdź', style: TextStyle(color: Color.fromRGBO(99, 171, 243, 1.0))),
