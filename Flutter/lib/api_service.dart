@@ -12,7 +12,7 @@ class ApiService {
 
     // Wysyłanie POST na endpoint backendu
     final response = await http.post(
-      Uri.parse('$baseUrl/paragon/save'), 
+      Uri.parse('$baseUrl/paragon/save-to-db'), 
       headers: {
         'Content-Type': 'application/json',
       },
