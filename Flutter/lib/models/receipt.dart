@@ -1,6 +1,6 @@
 class Receipt {
   final String storeName;
-  final String date;
+  final String? date;
   final List<ReceiptItem> items;
   final double total;
 

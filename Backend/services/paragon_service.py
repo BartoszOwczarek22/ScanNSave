@@ -1,6 +1,19 @@
 from services.db import supabase_client
 from models.paragon import ParagonInput
 from datetime import datetime
+import json
+import aiofiles
+from models.paragon import ParagonInput
+
+async def save_paragon_test(paragon_data: ParagonInput):
+    
+    paragon_dict = paragon_data.model_dump()
+    paragon_json = json.dumps(paragon_dict, indent=2, ensure_ascii=False)
+
+    async with aiofiles.open("paragon.txt", "w", encoding="utf-8") as file:
+        await file.write(paragon_json)
+
+    return {"message": "Paragon zapisany do pliku"}
 
 def save_paragon(paragon: ParagonInput):
     data = {

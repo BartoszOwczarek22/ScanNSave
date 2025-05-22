@@ -1,0 +1,57 @@
+{
+  "storeName": "Nieznany sklep",
+  "date": null,
+  "items": [
+    {
+      "name": "PLACEK PO HEGIERSKU1 szt,48.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "PLACEK PO WEGIERSKU 1 szt.x48.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "SCHABOWY PANIEROWANY 1 szt.*39.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "SCHABOWY PANIEROWANY 1 szt.*39.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "GRZANE Z SOKIEM I CYNAMONEM 0,5",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "2 szt.*19.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "CZEKOLADA DLA DZIARSKIEJ BABKI",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "2 szt.*30.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "GRZANE WINO 4 szt.*15.00",
+      "quantity": 0,
+      "price": 0.0
+    },
+    {
+      "name": "CYTRYNOWKA/MIĘTÓHK 5 MLL-16.00",
+      "quantity": 0,
+      "price": 0.0
+    }
+  ],
+  "total": 0.0
+}

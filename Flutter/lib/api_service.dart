@@ -5,34 +5,30 @@ import 'package:scan_n_save/models/receipt.dart';
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000'; 
 
-  Future<String> getHello() async {
-    final response = await http.get(Uri.parse('$baseUrl/'));
+  // Metoda wysyłająca obiekt Receipt do backendu
+  Future<void> sendReceiptToServer(Receipt receipt) async {
+    
+    String jsonBody = jsonEncode(receipt.toJson());
 
+    // Wysyłanie POST na endpoint backendu
+    final response = await http.post(
+      Uri.parse('$baseUrl/paragon/save'), 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonBody,
+    );
+
+    print('STATUS: ${response.statusCode}');
+    print('BODY: ${response.body}');
+
+    // Obsługa odpowiedzi
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['message'];
+      print('Sukces! Odpowiedź backendu: ${response.body}');
     } else {
-      throw Exception('Failed to load message');
+      print('Błąd przy wysyłaniu danych. Status: ${response.statusCode}');
+      print('Treść odpowiedzi: ${response.body}');
+      
     }
   }
-  void sendReceiptToServer(Receipt reciept) async {
-
-  // Serializacja do JSON
-  String jsonBody = jsonEncode(reciept.toJson());
-
-  // Wysłanie POST
-  final response = await http.post(
-    Uri.parse('$baseUrl/paragon/'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonBody,
-  );
-
-  if (response.statusCode == 200) {
-    print('Sukces! Odpowiedź: ${response.body}');
-  } else {
-    print('Błąd: ${response.statusCode}');
-  }
-}
 }

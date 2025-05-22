@@ -50,7 +50,7 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
   String storeName = detectStoreName(recognizedText.text);
   print("store name detected");
   print("detecting date");
-  String date = detectDate(recognizedText.text);
+  String? date = detectDate(recognizedText.text);
   print("date detected");
 
   print("parsing items");
@@ -322,14 +322,14 @@ String detectStoreName(String ocrText) {
   return 'Nieznany sklep';
 }
 
-String detectDate(String ocrText) {
+String? detectDate(String ocrText) {
   final textPre = ocrText.replaceAll(' ', '');
   RegExp regex = RegExp(r'2\d{3}-[01][0-9]-[0-3][0-9]');
   Iterable<RegExpMatch> matches = regex.allMatches(textPre);
 
   if (matches.isNotEmpty) {
-    return matches.first.group(0) ?? 'Brak daty';
+    return matches.first.group(0);
   } else {
-    return 'Brak daty';
+    return null;
   }
 }
