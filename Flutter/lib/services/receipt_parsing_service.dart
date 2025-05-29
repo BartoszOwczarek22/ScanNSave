@@ -126,6 +126,16 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
   for (int i = 0; i < itemsPos.length; i++) {
     final paramsId = findClosestProductParams(itemsPos[i].line, productParams);
     if (paramsId != -1) {
+      if (productParams[paramsId].price < 0 && i > 0) {
+        if (itemsPos[i - 1].quantity > 0) {
+          itemsPos[i - 1].price =
+              itemsPos[i - 1].price -
+              (productParams[paramsId].price * -1.0) / itemsPos[i - 1].quantity;
+          itemsPos.removeAt(i);
+          i--;
+          continue;
+        }
+      }
       itemsPos[i].quantity = productParams[paramsId].quantity;
       itemsPos[i].price = productParams[paramsId].price;
       itemsPos[i].type = productParams[paramsId].type;
@@ -169,9 +179,28 @@ ProductParams parsePriceQuantity(TextLine textLine) {
     return ''; // usuń
   });
   text = wynik;
+  text = text.replaceAll(',', '.');
   var parts = text.split('x');
   if (parts.length == 1) {
     parts = text.split('szt');
+    if (parts.length == 1) {
+      if (text.contains('-')) {
+        RegExp regex = RegExp(r'-[\d]+.\d\d');
+        Match? match = regex.firstMatch(text);
+        String reduceString = match?.group(0) ?? '';
+        double? reduce = double.tryParse(reduceString);
+        if (reduce != null) {
+          if (reduce < 0) {
+            return ProductParams(
+              line: textLine,
+              quantity: 1.0,
+              price: reduce,
+              type: productType.perPiece,
+            );
+          }
+        }
+      }
+    }
   }
 
   if (parts.length == 2) {
