@@ -165,7 +165,7 @@ int findClosestProductParams(TextLine line, List<ProductParams> pro) {
 
 //oblicza różnicę wysokości dwóch lini
 int verDiffBeetLines(TextLine line1, TextLine line2) {
-  return (line1.cornerPoints[0].y - line2.cornerPoints[1].y).abs();
+  return (line1.cornerPoints[1].y - line2.cornerPoints[0].y).abs();
 }
 
 ProductParams parsePriceQuantity(TextLine textLine) {
