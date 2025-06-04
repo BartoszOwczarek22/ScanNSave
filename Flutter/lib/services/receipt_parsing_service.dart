@@ -204,6 +204,9 @@ ProductParams parsePriceQuantity(TextLine textLine) {
   }
 
   if (parts.length == 2) {
+    for (int i = 0; i < parts.length; i++) {
+      parts[i] = parts[i].replaceAll(RegExp(r'[a-zA-Z]+'), '');
+    }
     final quantity = double.tryParse(parts[0].trim().replaceAll(',', '.'));
     //final parts2 = parts[1].split(' ');
     var secondPart = parts[1].replaceAll(',', '.');
@@ -328,7 +331,7 @@ String detectStoreName(String ocrText) {
     'biedronka',
     'lidl',
     'carrefour',
-    'żabka',
+    'zabka',
     'stokrotka',
     'netto',
     'kaufland',
