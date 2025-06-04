@@ -8,44 +8,42 @@ import 'package:scan_n_save/api_service.dart';
 class ReceiptScanningPage extends ConsumerWidget {
   String? recieptImagePath;
 
-  ReceiptScanningPage({
-    super.key,
-    required String this.recieptImagePath,
-  });
+  ReceiptScanningPage({super.key, required String this.recieptImagePath});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final receiptAsync = ref.watch(textRecognitionProvider(recieptImagePath!));
 
     return receiptAsync.when(
-      loading: () => Scaffold(body:Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(
-        body: Center(
-          child: Padding(padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Nie znaleziono paragonu.'),
-                SizedBox(height: 20),
-                Text("Upewnij się, że oświetlenie jest dobre, na zdjęciu jest cały paragon oraz zdjęcie robisz od góry.",
-                  textAlign: TextAlign.center,
+      loading: () => Scaffold(body: Center(child: CircularProgressIndicator())),
+      error:
+          (e, _) => Scaffold(
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Nie znaleziono paragonu.'),
+                    SizedBox(height: 20),
+                    Text(
+                      "Upewnij się, że oświetlenie jest dobre, na zdjęciu jest cały paragon oraz zdjęcie robisz od góry.",
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Wróć'),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Wróć'),
-                ),
-              ],
+              ),
             ),
-          )
-        ),
-      ),
+          ),
       data: (receipt) {
         return ProviderScope(
           overrides: [
-            receiptProvider.overrideWith(
-              (ref) => ReceiptNotifier(receipt),
-            ),
+            receiptProvider.overrideWith((ref) => ReceiptNotifier(receipt)),
           ],
           child: ReceiptDetailsPage(),
         );
@@ -53,7 +51,6 @@ class ReceiptScanningPage extends ConsumerWidget {
     );
   }
 }
-
 
 class ReceiptDetailsPage extends ConsumerWidget {
   String? recieptImagePath;
@@ -89,7 +86,10 @@ class ReceiptDetailsPage extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${receipt.total.toStringAsFixed(2)} zł',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -97,9 +97,14 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('Dodaj produkt'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   textStyle: const TextStyle(fontSize: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: () {
                   showAddItemDialog(context, ref);
@@ -112,7 +117,11 @@ class ReceiptDetailsPage extends ConsumerWidget {
     );
   }
 
-  Widget buildReceiptView(Receipt receipt, BuildContext context, WidgetRef ref) {
+  Widget buildReceiptView(
+    Receipt receipt,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -138,7 +147,12 @@ class ReceiptDetailsPage extends ConsumerWidget {
               SizedBox(width: 5),
               IconButton(
                 onPressed: () {
-                  showEditReceiptDialog(context, ref, receipt.storeName, receipt.date ?? "brak");
+                  showEditReceiptDialog(
+                    context,
+                    ref,
+                    receipt.storeName,
+                    receipt.date ?? "brak",
+                  );
                 },
                 icon: const Icon(Icons.edit, color: Colors.blue),
                 tooltip: 'Edytuj produkt',
@@ -169,6 +183,8 @@ class ReceiptDetailsPage extends ConsumerWidget {
                         onPressed: () {
                           showEditItemDialog(context, ref, item, index);
                         },
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
                       ),
                     ],
                   ),
@@ -182,7 +198,12 @@ class ReceiptDetailsPage extends ConsumerWidget {
     );
   }
 
-  void showEditReceiptDialog(BuildContext context, WidgetRef ref, String storeName, String date) {
+  void showEditReceiptDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String storeName,
+    String date,
+  ) {
     TextEditingController storeNameInputControler = TextEditingController();
     storeNameInputControler.text = storeName;
     DateTime? pickedDate;
@@ -200,14 +221,14 @@ class ReceiptDetailsPage extends ConsumerWidget {
                   decoration: const InputDecoration(
                     labelText: 'Sklep',
                     border: OutlineInputBorder(),
-                ),),
+                  ),
+                ),
                 OutlinedButton(
                   onPressed: () async {
                     pickedDate = await showDatePicker(
                       lastDate: DateTime.now(),
                       firstDate: DateTime.fromMillisecondsSinceEpoch(0),
-                      context: context
-                      
+                      context: context,
                     );
                   },
                   child: Text("wybierz datę"),
@@ -221,10 +242,15 @@ class ReceiptDetailsPage extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  ref.read(receiptProvider.notifier).udateStoreName(storeNameInputControler.text);
-                  if (pickedDate != null)
-                  {
-                    ref.read(receiptProvider.notifier).updateDate("${pickedDate!.year}-${pickedDate!.month}-${pickedDate!.day}");
+                  ref
+                      .read(receiptProvider.notifier)
+                      .udateStoreName(storeNameInputControler.text);
+                  if (pickedDate != null) {
+                    ref
+                        .read(receiptProvider.notifier)
+                        .updateDate(
+                          "${pickedDate!.year}-${pickedDate!.month}-${pickedDate!.day}",
+                        );
                   }
                   Navigator.of(context).pop();
                 },
@@ -242,116 +268,160 @@ class ReceiptDetailsPage extends ConsumerWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Dodaj produkt"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Nazwa produktu"),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: priceController,
-              decoration: const InputDecoration(labelText: "Cena (zł)"),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: quantityController,
-              decoration: const InputDecoration(labelText: "Ilość"),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text("Anuluj"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final price = double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
-              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.')) ?? 1.0;
-
-              if (name.isNotEmpty && price > 0 && quantity > 0) {
-                ref.read(receiptProvider.notifier).addItem(
-                  ReceiptItem(
-                    name: name,
-                    price: price,
-                    quantity: quantity,
-                    type: productType.perPiece,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Dodaj produkt"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: "Nazwa produktu",
                   ),
-                );
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text("Dodaj"),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(labelText: "Cena (zł)"),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(labelText: "Ilość"),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("Anuluj"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  final price =
+                      double.tryParse(
+                        priceController.text.replaceAll(',', '.'),
+                      ) ??
+                      0.0;
+                  final quantity =
+                      double.tryParse(
+                        quantityController.text.replaceAll(',', '.'),
+                      ) ??
+                      1.0;
+
+                  if (name.isNotEmpty && price > 0 && quantity > 0) {
+                    ref
+                        .read(receiptProvider.notifier)
+                        .addItem(
+                          ReceiptItem(
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                            type: productType.perPiece,
+                          ),
+                        );
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text("Dodaj"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  void showEditItemDialog(BuildContext context, WidgetRef ref, ReceiptItem item, int index) {
+  void showEditItemDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ReceiptItem item,
+    int index,
+  ) {
     final nameController = TextEditingController(text: item.name);
     final priceController = TextEditingController(text: item.price.toString());
-    final quantityController = TextEditingController(text: item.quantity.toString());
+    final quantityController = TextEditingController(
+      text: item.quantity.toString(),
+    );
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edytuj produkt"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Nazwa produktu"),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: priceController,
-              decoration: const InputDecoration(labelText: "Cena za sztukę (zł)"),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: quantityController,
-              decoration: const InputDecoration(labelText: "Ilość"),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text("Anuluj"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final price = double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
-              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.')) ?? 1.0;
-
-              if (name.isNotEmpty && price > 0 && quantity > 0) {
-                ref.read(receiptProvider.notifier).updateItem(
-                  index,
-                  item.copyWith(
-                    name: name,
-                    price: price,
-                    quantity: quantity,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Edytuj produkt"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: "Nazwa produktu",
                   ),
-                );
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text("Zapisz"),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: "Cena za sztukę (zł)",
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(labelText: "Ilość"),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  ref
+                      .read(receiptProvider.notifier)
+                      .removeItem(index);
+                  Navigator.of(context).pop();
+                },
+                child: Text("Usuń", style: TextStyle(color: Colors.red)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("Anuluj"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  final price =
+                      double.tryParse(
+                        priceController.text.replaceAll(',', '.'),
+                      ) ??
+                      0.0;
+                  final quantity =
+                      double.tryParse(
+                        quantityController.text.replaceAll(',', '.'),
+                      ) ??
+                      1.0;
+
+                  if (name.isNotEmpty && price > 0 && quantity > 0) {
+                    ref
+                        .read(receiptProvider.notifier)
+                        .updateItem(
+                          index,
+                          item.copyWith(
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                          ),
+                        );
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text("Zapisz"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
