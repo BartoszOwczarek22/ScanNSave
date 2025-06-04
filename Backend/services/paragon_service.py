@@ -3,6 +3,13 @@ from models.paragon import ParagonInput, ParagonResponse, ReceiptIndeksItem
 from typing import List, Dict, Any
 import json
 
+
+def get_shop_name(item: Dict[str, Any]) -> str:
+    try:
+        return item["shops_parcels"]["shops"]["name"]
+    except (TypeError, KeyError):
+        return None
+    
 def get_user_id_by_token(firebase_uid: str) -> Dict[str, Any]:
     """
     Pobiera ID użytkownika na podstawie Firebase UID (token)
@@ -99,7 +106,7 @@ def get_paragons_for_user(
         query = supabase_client.table("receipts")\
             .select("""
                 *,
-                shops_parcels!inner(
+                shops_parcels!left(
                     id,
                     location,
                     shops_id,
@@ -175,7 +182,7 @@ def get_paragons_for_user(
                     "create_date": item["create_date"],
                     "date": item["date"],
                     "sum_price": item["sum_price"],
-                    "shop_name": item["shops_parcels"]["shops"]["name"],
+                    "shop_name": get_shop_name(item),
                     "receipt_indekses": receipt_indekses
                 }
                 paragons.append(paragon)
@@ -265,7 +272,7 @@ def get_paragon_by_id(paragon_id: int, firebase_uid: str) -> Dict[str, Any]:
                 "create_date": item["create_date"],
                 "date": item["date"],
                 "sum_price": item["sum_price"],
-                "shop_name": item["shops_parcels"]["shops"]["name"],
+                "shop_name": get_shop_name(item),
                 "receipt_indekses": receipt_indekses
             }
             
