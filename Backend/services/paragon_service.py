@@ -61,8 +61,8 @@ def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
             indeks_data = {
                 "indeks": indeks_item.indeks,
                 "price": indeks_item.price,
-                "product_id": indeks_item.product_id,
-                "shop_id": indeks_item.shop_id
+                "product_id": None, # na sztywno koniecznie zmienić !!!!!!!!!!!!!!!!!!!
+                "shop_id": None # na sztywno koniecznie zmienić !!!!!!!!!!!!!!!!!!!
             }
             
             # Zapisujemy indeks
@@ -75,7 +75,7 @@ def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
                 connect_data = {
                     "receipt_id": receipt_id,
                     "receipt_indeks_id": indeks_id,
-                    "quantity": 1  # Domyślnie 1, można rozszerzyć
+                    "quantity": indeks_item.quantity 
                 }
                 
                 supabase_client.table("receipt_connect_indekses").insert(connect_data).execute()

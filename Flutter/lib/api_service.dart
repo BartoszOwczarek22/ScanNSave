@@ -4,7 +4,7 @@ import 'package:scan_n_save/models/receipt.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.0:8000'; 
+  static const String baseUrl = 'http://192.168.1.16:8000'; 
 
   // Metoda wysyłająca obiekt Receipt do backendu
   Future<void> sendReceiptToServer(Receipt receipt) async {

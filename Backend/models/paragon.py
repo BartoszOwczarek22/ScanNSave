@@ -4,20 +4,21 @@ from datetime import datetime, date
 
 class ParagonItem(BaseModel):
     name: str
-    quantity: int
+    quantity: float
     price: float
     product_id: Optional[int] = None  
 
 class ReceiptIndeksItem(BaseModel):
     indeks: str
     price: float
-    product_id: Optional[int] = None
-    shop_id: Optional[int] = None
+    quantity: float
+    #product_id: Optional[int] = None
+    #shop_id: Optional[int] = None
 
 class ParagonInput(BaseModel):
     creator_id: str  # Firebase UID
     date: str
-    shop_parcel_id: int
+    shop_parcel_id: str
     sum_price: float
     pic_path: Optional[str] = None
     receipt_indekses: List[ReceiptIndeksItem]

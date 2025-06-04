@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 class Receipt {
   final String storeName;
   final String? date;
@@ -8,10 +10,13 @@ class Receipt {
   : total = items.fold(0, (sum, item) => sum + item.price * item.quantity);
 
   Map<String, dynamic> toJson() => {
-    'storeName': storeName,
+    //'storeName': storeName,
     'date': date,
-    'items': items.map((item) => item.toJson()).toList(),
-    'total': total,
+    'receipt_indekses': items.map((item) => item.toJson()).toList(),
+    'sum_price': total,
+    'creator_id': FirebaseAuth.instance.currentUser?.uid,
+    'pic_path': 'path',
+    'shop_parcel_id': "6a074237-ca4f-47e0-b657-651d7ce72df2",
   };
   Receipt copyWith({
     String? storeName,
@@ -43,10 +48,12 @@ class ReceiptItem {
   });
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'type': productTypeToString(type),
+    'indeks': name,
+    //'type': productTypeToString(type),
     'quantity': quantity,
     'price': price,
+    //'product_id': 0,
+    //'shop_id': 0,
   };
   ReceiptItem copyWith({
     String? name,
