@@ -207,6 +207,11 @@ ProductParams parsePriceQuantity(TextLine textLine) {
     for (int i = 0; i < parts.length; i++) {
       parts[i] = parts[i].replaceAll(RegExp(r'[a-zA-Z]+'), '');
     }
+    RegExp regexQuantity = RegExp(r'(\d+.\d+)|\d+');
+    Match? matchQuantity = regexQuantity.firstMatch(parts[0]);
+    parts[0] = matchQuantity?.group(0) ?? '';
+
+
     final quantity = double.tryParse(parts[0].trim().replaceAll(',', '.'));
     //final parts2 = parts[1].split(' ');
     var secondPart = parts[1].replaceAll(',', '.');
