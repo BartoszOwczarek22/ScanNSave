@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from services.stats_service import *
 
-router = APIRouter(prefix="api/stats", tags=["Stats"])
+router = APIRouter(prefix="/api/stats", tags=["Stats"])
 
 @router.get("/categories")
 def stats_by_category(user_id: str, start_date: str, end_date: str):

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:scan_n_save/models/receipt.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000'; 
+  static const String baseUrl = 'http://192.168.20.249:8000'; 
 
   // Metoda wysyłająca obiekt Receipt do backendu
   Future<void> sendReceiptToServer(Receipt receipt) async {
@@ -113,4 +114,35 @@ class ApiService {
       throw Exception('Błąd przy pobieraniu paragonu');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getExpensesByCategory({required String userId, required String startDate, required String endDate,}) async {
+
+    final url = '$baseUrl/api/stats/categories'
+      '?user_id=$userId&start_date=$startDate&end_date=$endDate';
+
+    final response = await http.get(Uri.parse(url), headers: {'Content-Type' : 'application/json'});
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
+    } else {
+      print('Błąd: status ${response.statusCode}, body: ${response.body}');
+      throw Exception("Błąd: ${response.body}");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getExpensesByShop({required String userId, required String startDate, required String endDate,}) async {
+
+    final url = '$baseUrl/api/stats/shops'
+      '?user_id=$userId&start_date=$startDate&end_date=$endDate';
+
+    final response = await http.get(Uri.parse(url), headers: {'Content-Type' : 'application/json'});
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      print('Błąd: status ${response.statusCode}, body: ${response.body}');
+      throw Exception("Błąd: ${response.body}");
+    }
+  }
 }
+
+

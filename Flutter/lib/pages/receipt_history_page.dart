@@ -48,6 +48,7 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
         await loadAllReceipts();
       }
     } catch (e) {
+      if(!mounted) return;
       setState(() {
         errorMessage = 'Błąd przy pobieraniu danych: $e';
         isLoading = false;
