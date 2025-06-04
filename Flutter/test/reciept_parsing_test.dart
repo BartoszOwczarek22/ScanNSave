@@ -33,21 +33,60 @@ void main() {
         expect(parsedData.type, mockPriceQuantities[i].type);
       });
     }
-    
+  
+  });
+  List<(String, String)> testStringsPositive = [
+    ("sprzed", "spzed"),
+    ("Spred", "Sprzed"),
+    ("qq", "ee"), // dopuszcza się dwa błędy 
+    ("apple", "appl"), 
+    ("banana", "banan"),
+    ("grape", "grap"),
+  ];
+  List<(String, String)> testStringsNegative = [
+    ("sprzed", "dsfad"),
+    ("Spred", "sqod"),
+    ("qqqqq", "eeeee")
+  ];
+  group('string similarity tests', () {
+    for (var testString in testStringsPositive) {
+      test('should be true for "${testString.$1}" and "${testString.$2}"', () async {
+        final result = await isSimilar(testString.$1, testString.$2);
+        expect(result, true);
+      });
+    }
+    for (var testString in testStringsNegative) {
+      test('should be false for "${testString.$1}" and "${testString.$2}"', () async {
+        final result = await isSimilar(testString.$1, testString.$2);
+        expect(result, false);
+      });
+    }
+  });
 
-    // test('should handle missing price or quantity gracefully', () {
-    //   final receiptText = 'Item: Banana, Quantity: 2';
-    //   final parsedData = ReceiptParsingService.parseReceipt(receiptText);
+  List<(String, String)> testStringsDatePositive = [
+    ("dfafsdfsdf2023-10-01asdfasdf dfas 230-45-2", "2023-10-01"),
+    ("ggjdfklg dfkjs;f jf fdlk g 2021-12-30","2021-12-30"),
+    ("2017-07-12 sdfasdusdaf das 78 92 78.443 dasdHFJDS 9999-99-99","2017-07-12"),
+  ];
+  List<String> testStringsDateNegative = [
+    "dfafsdfsdf2023-10-0asdfasdf dfas 230-45-2",
+    "ggjdfklg dfkjs;f jf fdlk g 2021-1230",
+    "2017-22-12 sdfasdusdaf das 78 92 78.443 dasdHFJDS 9999-99-99"
+  ];
+  group("detecting date tests", () {
+    for (var testString in testStringsDatePositive) {
+      test('should detect date "${testString.$2}" in "${testString.$1}"', () {
+        final result = detectDate(testString.$1);
+        expect(result, isNotNull);
+        expect(result, testString.$2);
+      });
+    }
 
-    //   expect(parsedData['price'], null);
-    //   expect(parsedData['quantity'], 2);
-    // });
-
-    // test('should return null for invalid input', () {
-    //   final receiptText = 'Invalid receipt text';
-    //   final parsedData = ReceiptParsingService.parseReceipt(receiptText);
-
-    //   expect(parsedData, isNull);
-    // });
+    for (var testString in testStringsDateNegative) {
+      test('should detect null in "${testString}"', () {
+        final result = detectDate(testString);
+        expect(result, isNull);
+      });
+    }
   });
 }
