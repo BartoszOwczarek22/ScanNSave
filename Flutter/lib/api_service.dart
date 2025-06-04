@@ -30,13 +30,20 @@ class ApiService {
     }
   }
 
-  // Pobieranie listy paragonów z paginacją i filtrowaniem
+  // Pobieranie listy paragonów dla aktualnie zalogowanego użytkownika
   Future<Map<String, dynamic>> getParagons({
     int page = 1,
     int pageSize = 10,
     String? storeName,
   }) async {
-    String url = '$baseUrl/paragon/list?page=$page&page_size=$pageSize';
+    // Pobieramy ID aktualnie zalogowanego użytkownika
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+    
+    String userId = currentUser.uid;
+    String url = '$baseUrl/paragon/list?user_id=$userId&page=$page&page_size=$pageSize';
     
     if (storeName != null && storeName.isNotEmpty) {
       url += '&store_name=${Uri.encodeComponent(storeName)}';
@@ -52,18 +59,14 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       
-      // Jeśli odpowiedź ma strukturę z 'paragons'
-      if (data is Map<String, dynamic> && data.containsKey('paragons')) {
-        return {
-          'items': data['paragons'],
-          'total_pages': 1, // Domyślnie jedna strona jeśli brak informacji o paginacji
-          'current_page': page,
-          'total_items': (data['paragons'] as List).length,
-        };
-      }
-      
-      // Jeśli odpowiedź ma standardową strukturę paginacji
-      return data;
+      // Zwracamy dane w standardowym formacie
+      return {
+        'items': data['paragons'] ?? [],
+        'total_pages': data['total_pages'] ?? 1,
+        'current_page': data['page'] ?? page,
+        'total_items': data['total_count'] ?? 0,
+        'page_size': data['page_size'] ?? pageSize,
+      };
     } else {
       print('Błąd przy pobieraniu paragonów. Status: ${response.statusCode}');
       print('Treść odpowiedzi: ${response.body}');
@@ -71,12 +74,47 @@ class ApiService {
     }
   }
 
-  // Pobieranie paragonów w zakresie dat
+  // Pobieranie konkretnego paragonu po ID dla aktualnego użytkownika
+  Future<Map<String, dynamic>> getParagonById(int paragonId) async {
+    // Pobieramy ID aktualnie zalogowanego użytkownika
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+    
+    String userId = currentUser.uid;
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/paragon/$paragonId?user_id=$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 404) {
+      throw Exception('Paragon nie został znaleziony');
+    } else {
+      print('Błąd przy pobieraniu paragonu. Status: ${response.statusCode}');
+      print('Treść odpowiedzi: ${response.body}');
+      throw Exception('Błąd przy pobieraniu paragonu');
+    }
+  }
+
+  // Pobieranie paragonów w zakresie dat dla aktualnego użytkownika
   Future<List<Map<String, dynamic>>> getParagonsInDateRange({
     required String startDate,
     required String endDate,
   }) async {
-    final url = '$baseUrl/paragon/date-range/?start_date=$startDate&end_date=$endDate';
+    // Pobieramy ID aktualnie zalogowanego użytkownika
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+    
+    String userId = currentUser.uid;
+    final url = '$baseUrl/paragon/date-range/?user_id=$userId&start_date=$startDate&end_date=$endDate';
 
     final response = await http.get(
       Uri.parse(url),
@@ -95,28 +133,53 @@ class ApiService {
     }
   }
 
-  // Pobieranie konkretnego paragonu po ID
-  Future<Map<String, dynamic>> getParagonById(int paragonId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/paragon/$paragonId'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else if (response.statusCode == 404) {
-      throw Exception('Paragon nie został znaleziony');
-    } else {
-      print('Błąd przy pobieraniu paragonu. Status: ${response.statusCode}');
-      print('Treść odpowiedzi: ${response.body}');
-      throw Exception('Błąd przy pobieraniu paragonu');
+  // Dodatkowa metoda do pobierania wszystkich paragonów użytkownika bez paginacji
+  Future<List<Map<String, dynamic>>> getAllUserParagons() async {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
     }
+    
+    String userId = currentUser.uid;
+    List<Map<String, dynamic>> allParagons = [];
+    int page = 1;
+    int pageSize = 100;
+    bool hasMorePages = true;
+    
+    while (hasMorePages) {
+      try {
+        final response = await getParagons(
+          page: page,
+          pageSize: pageSize,
+        );
+        
+        List<dynamic> paragons = response['items'] ?? [];
+        allParagons.addAll(paragons.cast<Map<String, dynamic>>());
+        
+        int totalPages = response['total_pages'] ?? 1;
+        hasMorePages = page < totalPages;
+        page++;
+        
+      } catch (e) {
+        print('Błąd przy pobieraniu strony $page: $e');
+        break;
+      }
+    }
+    
+    return allParagons;
   }
 
-  Future<List<Map<String, dynamic>>> getExpensesByCategory({required String userId, required String startDate, required String endDate,}) async {
-
+  Future<List<Map<String, dynamic>>> getExpensesByCategory({
+    required String startDate, 
+    required String endDate,
+  }) async {
+    // Pobieramy ID aktualnie zalogowanego użytkownika
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+    
+    String userId = currentUser.uid;
     final url = '$baseUrl/api/stats/categories'
       '?user_id=$userId&start_date=$startDate&end_date=$endDate';
 
@@ -129,8 +192,17 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getExpensesByShop({required String userId, required String startDate, required String endDate,}) async {
-
+  Future<List<Map<String, dynamic>>> getExpensesByShop({
+    required String startDate, 
+    required String endDate,
+  }) async {
+    // Pobieramy ID aktualnie zalogowanego użytkownika
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+    
+    String userId = currentUser.uid;
     final url = '$baseUrl/api/stats/shops'
       '?user_id=$userId&start_date=$startDate&end_date=$endDate';
 
@@ -144,5 +216,3 @@ class ApiService {
     }
   }
 }
-
-

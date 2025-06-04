@@ -1,374 +1,305 @@
 from services.db import supabase_client
-from models.paragon import (
-    ParagonInput, ParagonResponse, ParagonListResponse, 
-    ReceiptShareInput, ProductCreate, CategoryCreate, 
-    ShopCreate, ShopParcelCreate, ParagonItem
-)
-from datetime import datetime
+from models.paragon import ParagonInput, ParagonResponse, ReceiptIndeksItem
+from typing import List, Dict, Any
 import json
-import aiofiles
-from typing import Optional, List
-from uuid import UUID  # Add this import
 
-
-async def save_paragon_test(paragon_data: ParagonInput):
-    """Funkcja testowa - zapisuje do pliku"""
-    paragon_dict = paragon_data.model_dump()
-    paragon_json = json.dumps(paragon_dict, indent=2, ensure_ascii=False)
-
-    async with aiofiles.open("paragon.txt", "w", encoding="utf-8") as file:
-        await file.write(paragon_json)
-
-    return {"message": "Paragon zapisany do pliku"}
-
-
-def find_shop(shop_name: str) -> int:
-    """Znajdź lub utwórz sklep"""
+def get_user_id_by_token(firebase_uid: str) -> Dict[str, Any]:
+    """
+    Pobiera ID użytkownika na podstawie Firebase UID (token)
+    """
     try:
-        # Sprawdź czy sklep już istnieje
-        response = supabase_client.table("shops").select("id").eq("name", shop_name).execute()
+        result = supabase_client.table("users")\
+            .select("id")\
+            .eq("token", firebase_uid)\
+            .execute()
         
-        if response.data:
-            return response.data[0]['id']
-        
-    except Exception as e:
-        print(f"Błąd podczas wyszukiwania sklepu: {str(e)}")
-        return None
-
-
-def find_or_create_product(product_name: str, category_id: Optional[int] = None) -> int:
-    """Znajdź lub utwórz produkt"""
-    try:
-        # Sprawdź czy produkt już istnieje
-        response = supabase_client.table("product").select("id").eq("name", product_name).execute()
-        
-        if response.data:
-            return response.data[0]['id']
-        
-        # Utwórz nowy produkt
-        product_data = {"name": product_name}
-        if category_id:
-            product_data["categorie_id"] = category_id
-            
-        response = supabase_client.table("product").insert(product_data).execute()
-        return response.data[0]['id']
-    
-    except Exception as e:
-        print(f"Błąd podczas tworzenia/wyszukiwania produktu: {str(e)}")
-        return None
-
-
-def save_paragon(paragon: ParagonInput):
-    """Zapisuje paragon do bazy danych używając pełnej struktury"""
-    try:
-        # Handle user_id - ensure it's a proper UUID string
-        if isinstance(paragon.user_id, str):
-            try:
-                UUID(paragon.user_id)
-                creator_id_str = paragon.user_id
-            except ValueError:
-                return {"error": "Nieprawidłowy format user_id - musi być UUID"}
+        if result.data and len(result.data) > 0:
+            return {"success": True, "user_id": result.data[0]["id"]}
         else:
-            creator_id_str = str(paragon.user_id)
+            return {"success": False, "error": "Użytkownik nie został znaleziony"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
+    """
+    Zapisuje paragon do bazy danych wraz z indeksami
+    """
+    try:
+        # Najpierw pobieramy ID użytkownika na podstawie Firebase UID
+        user_result = get_user_id_by_token(paragon_data.creator_id)
+        if not user_result["success"]:
+            return {"success": False, "error": f"Błąd użytkownika: {user_result['error']}"}
         
-        # Handle shop_parcel_id if provided
-        shop_parcel_id_str = None
-        if paragon.shop_parcel_id:
-            if isinstance(paragon.shop_parcel_id, str):
-                try:
-                    UUID(paragon.shop_parcel_id)
-                    shop_parcel_id_str = paragon.shop_parcel_id
-                except ValueError:
-                    return {"error": "Nieprawidłowy format shop_parcel_id - musi być UUID"}
-            else:
-                shop_parcel_id_str = str(paragon.shop_parcel_id)
+        user_id = user_result["user_id"]
         
-        # 1. Znajdź lub utwórz sklep
-        shop_id = find_shop(paragon.storeName)
-        if not shop_id:
-            return {"error": "Nie udało się znaleźć/utworzyć sklepu"}
-        
-        # 2. Zapisz główny rekord paragonu
+        # Zapisujemy główny paragon do tabeli receipts
         receipt_data = {
-            "creator_id": creator_id_str,
-            "create_date": datetime.utcnow().isoformat(),
-            "date": paragon.date,
-            "pic_path": paragon.pic_path,
-            "sum_price": paragon.total
+            "creator_id": user_id,  # Teraz używamy ID z tabeli users
+            "date": paragon_data.date,
+            "shop_parcel_id": paragon_data.shop_parcel_id,
+            "sum_price": paragon_data.sum_price,
+            "pic_path": paragon_data.pic_path
         }
-        if shop_parcel_id_str:
-            receipt_data["shop_parcel_id"] = shop_parcel_id_str
         
-        receipt_response = supabase_client.table("receipts").insert(receipt_data).execute()
-        if not receipt_response.data:
-            return {"error": "Nie udało się zapisać paragonu"}
+        # Zapisujemy paragon
+        receipt_result = supabase_client.table("receipts").insert(receipt_data).execute()
         
-        receipt_id = receipt_response.data[0]['id']
+        if not receipt_result.data:
+            return {"success": False, "error": "Nie udało się zapisać paragonu"}
         
-        # 3. Przygotuj dane do dwóch tabel
-        receipt_indekses_data = []
-        receipt_connect_indekses_data = []
+        receipt_id = receipt_result.data[0]["id"]
         
-        for item in paragon.items:
-            product_id = find_or_create_product(item.name)
+        # Zapisujemy indeksy do tabeli receipt_indekses
+        for indeks_item in paragon_data.receipt_indekses:
+            indeks_data = {
+                "indeks": indeks_item.indeks,
+                "price": indeks_item.price,
+                "product_id": indeks_item.product_id,
+                "shop_id": indeks_item.shop_id
+            }
             
-            receipt_indekses_data.append({
-                "id": receipt_id,
-                "indeks": item.name,
-                "price": item.price,
-                "product_id": product_id,
-                "shop_id": shop_id,
-            })
+            # Zapisujemy indeks
+            indeks_result = supabase_client.table("receipt_indekses").insert(indeks_data).execute()
             
-            receipt_connect_indekses_data.append({
-                "receipt_id": receipt_id,
-                "quantity": item.quantity
-            })
+            if indeks_result.data:
+                indeks_id = indeks_result.data[0]["id"]
+                
+                # Łączymy paragon z indeksem w tabeli receipt_connect_indekses
+                connect_data = {
+                    "receipt_id": receipt_id,
+                    "receipt_indeks_id": indeks_id,
+                    "quantity": 1  # Domyślnie 1, można rozszerzyć
+                }
+                
+                supabase_client.table("receipt_connect_indekses").insert(connect_data).execute()
         
-        # 4. Wstaw do receipt_indekses
-        if receipt_indekses_data:
-            items_response = supabase_client.table("receipt_indekses").insert(receipt_indekses_data).execute()
-            if not items_response.data:
-                supabase_client.table("receipts").delete().eq("id", receipt_id).execute()
-                return {"error": "Nie udało się zapisać pozycji paragonu (receipt_indekses)"}
-        
-        # 5. Wstaw do receipt_connect_indekses
-        if receipt_connect_indekses_data:
-            connect_response = supabase_client.table("receipt_connect_indekses").insert(receipt_connect_indekses_data).execute()
-            if not connect_response.data:
-                # Rollback - usuń też wpisy z receipt_indekses i receipts
-                supabase_client.table("receipt_indekses").delete().eq("receipt_id", receipt_id).execute()
-                supabase_client.table("receipts").delete().eq("id", receipt_id).execute()
-                return {"error": "Nie udało się zapisać ilości produktów (receipt_connect_indekses)"}
-        
-        return {"message": "Paragon zapisany pomyślnie", "receipt_id": receipt_id}
-        
+        return {"success": True, "data": receipt_result.data[0]}
+            
     except Exception as e:
-        return {"error": "Wyjątek podczas zapisu paragonu", "details": str(e)}
+        return {"success": False, "error": str(e)}
 
-def get_paragons(page: int = 1, page_size: int = 10, store_name: Optional[str] = None, user_id: Optional[int] = None) -> ParagonListResponse:
-    """Pobiera paragony z pełną strukturą bazy danych"""
+def get_paragons_for_user(
+    firebase_uid: str, 
+    page: int = 1, 
+    page_size: int = 10,
+    store_name: str = None
+) -> Dict[str, Any]:
+    """
+    Pobiera paragony dla konkretnego użytkownika z JOIN do shops_parcels i shops
+    """
     try:
-        offset = (page - 1) * page_size
+        # Najpierw pobieramy ID użytkownika na podstawie Firebase UID
+        user_result = get_user_id_by_token(firebase_uid)
+        if not user_result["success"]:
+            return {"success": False, "error": f"Błąd użytkownika: {user_result['error']}"}
         
-        # Główne zapytanie z JOIN-ami
-        query = """
-        SELECT 
-            r.*,
-            sp.location,
-            s.name as shop_name
-        FROM receipts r
-        LEFT JOIN shops_parcels sp ON r.shop_parcel_id = sp.id
-        LEFT JOIN shops s ON sp.shops_id = s.id
-        """
+        user_id = user_result["user_id"]
         
-        conditions = []
-        params = []
+        # Bazowe zapytanie z JOIN do shops_parcels i shops
+        query = supabase_client.table("receipts")\
+            .select("""
+                *,
+                shops_parcels!inner(
+                    id,
+                    location,
+                    shops_id,
+                    shops!inner(
+                        id,
+                        name
+                    )
+                )
+            """)\
+            .eq("creator_id", user_id)  # Używamy user_id zamiast firebase_uid
         
-        if user_id:
-            conditions.append("r.creator_id = %s")
-            params.append(user_id)
-        
+        # Dodajemy filtr po nazwie sklepu jeśli podany
         if store_name:
-            conditions.append("s.name ILIKE %s")
-            params.append(f"%{store_name}%")
+            query = query.ilike("shops_parcels.shops.name", f"%{store_name}%")
         
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
+        # Sortujemy po dacie (najnowsze pierwsze)
+        query = query.order("date", desc=True)
         
-        query += f" ORDER BY r.create_date DESC LIMIT {page_size} OFFSET {offset}"
-        
-        # Wykonaj zapytanie (to wymaga użycia raw SQL lub odpowiedniego ORM)
-        # Dla uproszczenia używam podstawowego zapytania Supabase
-        base_query = supabase_client.table("receipts").select(
-            "*, shops_parcels(location, shops(name))"
-        )
-        
-        if user_id:
-            base_query = base_query.eq("creator_id", user_id)
-        
-        response = base_query.order("create_date", desc=True).range(offset, offset + page_size - 1).execute()
-        
-        if not response.data:
-            return ParagonListResponse(
-                paragons=[],
-                total_count=0,
-                page=page,
-                page_size=page_size
-            )
-        
-        paragons = []
-        for receipt_row in response.data:
-            # Pobierz pozycje dla każdego paragonu
-            items_response = supabase_client.table("receipt_indekses").select(
-                "*, product(name)"
-            ).eq("receipt_id", receipt_row['id']).execute()
+        # Pobieramy całkowitą liczbę rekordów dla paginacji
+        count_query = supabase_client.table("receipts")\
+            .select("id", count="exact")\
+            .eq("creator_id", user_id)
             
-            items = []
-            if items_response.data:
-                for item_row in items_response.data:
-                    items.append(ParagonItem(
-                        name=item_row['indeks'],
-                        quantity=item_row['quantity'],
-                        price=item_row['price'],
-                        product_id=item_row['product_id']
-                    ))
+        if store_name:
+            count_query = count_query.select("""
+                id,
+                shops_parcels!inner(
+                    shops!inner(name)
+                )
+            """, count="exact").ilike("shops_parcels.shops.name", f"%{store_name}%")
             
-            # Przygotuj informacje o sklepie
-            shop_info = {}
-            if receipt_row.get('shops_parcels'):
-                shop_info['location'] = receipt_row['shops_parcels'].get('location')
-                if receipt_row['shops_parcels'].get('shops'):
-                    shop_info['shop_name'] = receipt_row['shops_parcels']['shops'].get('name')
-            
-            paragon = ParagonResponse.from_db_row(receipt_row, items, shop_info)
-            paragons.append(paragon)
-        
-        # Policz całkowitą liczbę rekordów
-        count_query = supabase_client.table("receipts").select("id", count="exact")
-        if user_id:
-            count_query = count_query.eq("creator_id", user_id)
-        
         count_response = count_query.execute()
-        total_count = count_response.count if count_response.count else len(paragons)
+        total_count = count_response.count
         
-        return ParagonListResponse(
-            paragons=paragons,
-            total_count=total_count,
-            page=page,
-            page_size=page_size
-        )
+        # Dodajemy paginację
+        offset = (page - 1) * page_size
+        query = query.range(offset, offset + page_size - 1)
         
-    except Exception as e:
-        print(f"Błąd podczas pobierania paragonów: {str(e)}")
-        return ParagonListResponse(
-            paragons=[],
-            total_count=0,
-            page=page,
-            page_size=page_size
-        )
-
-
-def get_paragon_by_id(paragon_id: int) -> Optional[ParagonResponse]:
-    """Pobiera pojedynczy paragon z pełnymi danymi"""
-    try:
-        # Pobierz główny rekord paragonu
-        response = supabase_client.table("receipts").select(
-            "*, shops_parcels(location, shops(name))"
-        ).eq("id", paragon_id).single().execute()
+        # Wykonujemy zapytanie
+        result = query.execute()
         
-        if not response.data:
-            return None
-        
-        receipt_row = response.data
-        
-        # Pobierz pozycje paragonu
-        items_response = supabase_client.table("receipt_indekses").select(
-            "*, product(name)"
-        ).eq("receipt_id", paragon_id).execute()
-        
-        items = []
-        if items_response.data:
-            for item_row in items_response.data:
-                items.append(ParagonItem(
-                    name=item_row['indeks'],
-                    quantity=item_row['quantity'],
-                    price=item_row['price'],
-                    product_id=item_row['product_id']
-                ))
-        
-        # Przygotuj informacje o sklepie
-        shop_info = {}
-        if receipt_row.get('shops_parcels'):
-            shop_info['location'] = receipt_row['shops_parcels'].get('location')
-            if receipt_row['shops_parcels'].get('shops'):
-                shop_info['shop_name'] = receipt_row['shops_parcels']['shops'].get('name')
-        
-        return ParagonResponse.from_db_row(receipt_row, items, shop_info)
-        
-    except Exception as e:
-        print(f"Błąd podczas pobierania paragonu {paragon_id}: {str(e)}")
-        return None
-
-
-def delete_paragon(paragon_id: int, user_id: int):
-    """Usuwa paragon i wszystkie powiązane pozycje"""
-    try:
-        # Sprawdź czy paragon istnieje i należy do użytkownika
-        response = supabase_client.table("receipts").select("creator_id").eq("id", paragon_id).single().execute()
-        
-        if not response.data:
-            return {"error": "Paragon nie został znaleziony"}
-        
-        # Compare as strings to avoid UUID conversion issues
-        creator_id_str = str(response.data['creator_id'])
-        user_id_str = str(user_id)
-        
-        if creator_id_str != user_id_str:
-            return {"error": "Brak uprawnień do usunięcia tego paragonu"}
-        
-        # Usuń pozycje paragonu
-        supabase_client.table("receipt_indekses").delete().eq("receipt_id", paragon_id).execute()
-        
-        # Usuń udostępnienia paragonu
-        supabase_client.table("receipt_shared").delete().eq("receipt_id", paragon_id).execute()
-        
-        # Usuń główny rekord paragonu
-        delete_response = supabase_client.table("receipts").delete().eq("id", paragon_id).execute()
-        
-        if delete_response.data:
-            return {"message": "Paragon został usunięty pomyślnie"}
+        if result.data:
+            paragons = []
+            for item in result.data:
+                # Pobieramy indeksy dla tego paragonu
+                indekses_query = supabase_client.table("receipt_connect_indekses")\
+                    .select("""
+                        quantity,
+                        receipt_indekses!inner(
+                            id,
+                            indeks,
+                            price,
+                            product_id,
+                            shop_id
+                        )
+                    """)\
+                    .eq("receipt_id", item["id"])
+                
+                indekses_result = indekses_query.execute()
+                receipt_indekses = []
+                
+                if indekses_result.data:
+                    for idx in indekses_result.data:
+                        receipt_indekses.append({
+                            "indeks": idx["receipt_indekses"]["indeks"],
+                            "price": idx["receipt_indekses"]["price"],
+                            "quantity": idx["quantity"],
+                            "product_id": idx["receipt_indekses"]["product_id"],
+                            "shop_id": idx["receipt_indekses"]["shop_id"]
+                        })
+                
+                paragon = {
+                    "create_date": item["create_date"],
+                    "date": item["date"],
+                    "sum_price": item["sum_price"],
+                    "shop_name": item["shops_parcels"]["shops"]["name"],
+                    "receipt_indekses": receipt_indekses
+                }
+                paragons.append(paragon)
+            
+            return {
+                "success": True,
+                "paragons": paragons,
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": (total_count + page_size - 1) // page_size
+            }
         else:
-            return {"error": "Nie udało się usunąć paragonu"}
+            return {
+                "success": True,
+                "paragons": [],
+                "total_count": 0,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": 0
+            }
             
     except Exception as e:
-        return {"error": "Błąd podczas usuwania paragonu", "details": str(e)}
+        return {"success": False, "error": str(e)}
 
-
-def get_paragons_by_date_range(start_date: str, end_date: str, user_id: Optional[int] = None) -> List[ParagonResponse]:
-    """Pobiera paragony z zakresu dat"""
+def get_paragon_by_id(paragon_id: int, firebase_uid: str) -> Dict[str, Any]:
+    """
+    Pobiera konkretny paragon po ID (tylko dla właściciela)
+    """
     try:
-        query = supabase_client.table("receipts").select(
-            "*, shops_parcels(location, shops(name))"
-        ).gte("date", start_date).lte("date", end_date)
+        # Najpierw pobieramy ID użytkownika na podstawie Firebase UID
+        user_result = get_user_id_by_token(firebase_uid)
+        if not user_result["success"]:
+            return {"success": False, "error": f"Błąd użytkownika: {user_result['error']}"}
         
-        if user_id:
-            query = query.eq("creator_id", user_id)
+        user_id = user_result["user_id"]
         
-        response = query.order("date", desc=True).execute()
+        # Pobieramy paragon z JOIN do shops
+        result = supabase_client.table("receipts")\
+            .select("""
+                *,
+                shops_parcels!inner(
+                    id,
+                    location,
+                    shops_id,
+                    shops!inner(
+                        id,
+                        name
+                    )
+                )
+            """)\
+            .eq("id", paragon_id)\
+            .eq("creator_id", user_id)\
+            .execute()
         
-        paragons = []
-        if response.data:
-            for receipt_row in response.data:
-                # Pobierz pozycje dla każdego paragonu
-                items_response = supabase_client.table("receipt_indekses").select(
-                    "*, product(name)"
-                ).eq("receipt_id", receipt_row['id']).execute()
-                
-                items = []
-                if items_response.data:
-                    for item_row in items_response.data:
-                        items.append(ParagonItem(
-                            name=item_row['indeks'],
-                            quantity=item_row['quantity'],
-                            price=item_row['price'],
-                            product_id=item_row['product_id']
-                        ))
-                
-                # Przygotuj informacje o sklepie
-                shop_info = {}
-                if receipt_row.get('shops_parcels'):
-                    shop_info['location'] = receipt_row['shops_parcels'].get('location')
-                    if receipt_row['shops_parcels'].get('shops'):
-                        shop_info['shop_name'] = receipt_row['shops_parcels']['shops'].get('name')
-                
-                paragon = ParagonResponse.from_db_row(receipt_row, items, shop_info)
-                paragons.append(paragon)
+        if result.data:
+            item = result.data[0]
+            
+            # Pobieramy indeksy dla tego paragonu
+            indekses_query = supabase_client.table("receipt_connect_indekses")\
+                .select("""
+                    quantity,
+                    receipt_indekses!inner(
+                        id,
+                        indeks,
+                        price,
+                        product_id,
+                        shop_id
+                    )
+                """)\
+                .eq("receipt_id", item["id"])
+            
+            indekses_result = indekses_query.execute()
+            receipt_indekses = []
+            
+            if indekses_result.data:
+                for idx in indekses_result.data:
+                    receipt_indekses.append({
+                        "indeks": idx["receipt_indekses"]["indeks"],
+                        "price": idx["receipt_indekses"]["price"],
+                        "quantity": idx["quantity"],
+                        "product_id": idx["receipt_indekses"]["product_id"],
+                        "shop_id": idx["receipt_indekses"]["shop_id"]
+                    })
+            
+            paragon = {
+                "create_date": item["create_date"],
+                "date": item["date"],
+                "sum_price": item["sum_price"],
+                "shop_name": item["shops_parcels"]["shops"]["name"],
+                "receipt_indekses": receipt_indekses
+            }
+            
+            return {"success": True, "paragon": paragon}
+        else:
+            return {"success": False, "error": "Paragon nie został znaleziony"}
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def get_paragons_in_date_range(firebase_uid: str, start_date: str, end_date: str) -> Dict[str, Any]:
+    """
+    Pobiera paragony użytkownika w określonym zakresie dat
+    """
+    try:
+        # Najpierw pobieramy ID użytkownika na podstawie Firebase UID
+        user_result = get_user_id_by_token(firebase_uid)
+        if not user_result["success"]:
+            return {"success": False, "error": f"Błąd użytkownika: {user_result['error']}"}
         
-        return paragons
+        user_id = user_result["user_id"]
+        
+        result = supabase_client.table("receipts")\
+            .select("*")\
+            .eq("creator_id", user_id)\
+            .gte("date", start_date)\
+            .lte("date", end_date)\
+            .order("date", desc=True)\
+            .execute()
+        
+        if result.data:
+            return {"success": True, "paragons": result.data}
+        else:
+            return {"success": True, "paragons": []}
         
     except Exception as e:
-        print(f"Błąd podczas pobierania paragonów z zakresu dat: {str(e)}")
-        return []
-
-
+        return {"success": False, "error": str(e)}
