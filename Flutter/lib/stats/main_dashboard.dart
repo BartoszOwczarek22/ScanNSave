@@ -167,12 +167,6 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statystyki wydatków'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh),
-          onPressed: _loadData,
-          tooltip: 'Odśwież dane',
-          ),
-        ],
       ),
       body: SafeArea(
         child: _isLoading ? const Center(child: CircularProgressIndicator()) : _errorMessage != null ? _buildErrorWidget():
@@ -185,16 +179,19 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
                   setState(() {
                     _currentFilterType = type;
                   });
+                  _loadData();
                 }, onYearChanged: (year){
                   if (!mounted) return;
                   setState(() {
                     _selectedYear = year;
                   });
+                  _loadData();
                 }, onMonthChanged: (month){
                   if (!mounted) return;
                   setState(() {
                     _selectedMonth = month;
                   });
+                  _loadData();
                 }),
                 
                 // Podsumowanie
