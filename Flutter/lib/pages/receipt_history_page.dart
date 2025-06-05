@@ -543,6 +543,7 @@ Widget _buildItemsList(Map<String, dynamic> receipt) {
             child: Scrollbar(
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: items.asMap().entries.map((entry) {
                     try {
                       final index = entry.key;

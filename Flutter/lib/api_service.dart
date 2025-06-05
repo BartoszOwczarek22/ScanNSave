@@ -4,8 +4,30 @@ import 'package:scan_n_save/models/receipt.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.162:8000'; 
+  static const String baseUrl = 'http://10.0.2.2:8000'; 
 
+
+  Future<void> sendUserToken() {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+
+    final String token = user.uid; // Pobierz token użytkownika
+    final String name = user.email ?? "błąd"; // Pobierz email użytkownika
+
+    return http.post(
+      Uri.parse('$baseUrl/user/add'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'token': token, 'name': name}),
+    ).then((response) {
+      if (response.statusCode != 200) {
+        throw Exception('Błąd przy wysyłaniu tokenu użytkownika: ${response.statusCode}');
+      }
+    });
+  }
   // Metoda wysyłająca obiekt Receipt do backendu
   Future<void> sendReceiptToServer(Receipt receipt) async {
     final User? user = FirebaseAuth.instance.currentUser;
