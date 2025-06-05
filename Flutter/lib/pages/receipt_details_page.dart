@@ -282,7 +282,6 @@ class ReceiptDetailsPage extends ConsumerWidget {
                     name: name,
                     price: price,
                     quantity: quantity,
-                    type: productType.perPiece,
                   ),
                 );
                 Navigator.of(context).pop();

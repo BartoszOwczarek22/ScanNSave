@@ -4,14 +4,27 @@ import 'package:scan_n_save/models/receipt.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.0:8000'; 
+  static const String baseUrl = 'http://192.168.0.162:8000'; 
 
   // Metoda wysyłająca obiekt Receipt do backendu
   Future<void> sendReceiptToServer(Receipt receipt) async {
-    String jsonBody = jsonEncode(receipt.toJson());
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('Użytkownik nie jest zalogowany');
+    }
+
+    // Utwórz Receipt z userId
+    final receiptWithUserId = Receipt(
+      storeName: receipt.storeName,
+      date: receipt.date,
+      items: receipt.items,
+      userId: user.uid,
+    );
+
+    String jsonBody = jsonEncode(receiptWithUserId.toJson());
 
     final response = await http.post(
-      Uri.parse('$baseUrl/paragon/save-to-db'), 
+      Uri.parse('$baseUrl/receipt/save'), // Zmieniony endpoint
       headers: {
         'Content-Type': 'application/json',
       },

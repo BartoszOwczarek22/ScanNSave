@@ -7,18 +7,17 @@ import 'package:scan_n_save/services/receipt_parsing_service.dart';
 class MockPriceQuantity {
   final double quantity;
   final double price;
-  final productType type;
   final String? name;
 
-  MockPriceQuantity({required this.quantity, required this.price, required this.type, required this.name});
+  MockPriceQuantity({required this.quantity, required this.price, required this.name});
 }
 
 List<MockPriceQuantity> mockPriceQuantities = [
-  MockPriceQuantity(quantity: 1.0, price: 2.99, type: productType.perPiece, name: '1.0x 2.99 2.99'),
-  MockPriceQuantity(quantity: 3.2, price: 83.89, type: productType.byWeight, name: '3.2x 83.8983.89'),
-  MockPriceQuantity(quantity: 1.0, price: 2.99, type: productType.perPiece, name: '1.0szt. 2.99 2.99'),
-  MockPriceQuantity(quantity: 2.0, price: 5.99, type: productType.perPiece, name: '2.0szt 5.995.99 A'),
-  MockPriceQuantity(quantity: 1.0, price: 9.99, type: productType.perPiece, name: '1.0szt. x9.99 9.99C'),
+  MockPriceQuantity(quantity: 1.0, price: 2.99,  name: '1.0x 2.99 2.99'),
+  MockPriceQuantity(quantity: 3.2, price: 83.89, name: '3.2x 83.8983.89'),
+  MockPriceQuantity(quantity: 1.0, price: 2.99, name: '1.0szt. 2.99 2.99'),
+  MockPriceQuantity(quantity: 2.0, price: 5.99,  name: '2.0szt 5.995.99 A'),
+  MockPriceQuantity(quantity: 1.0, price: 9.99,  name: '1.0szt. x9.99 9.99C'),
 ];
 
 void main() {
@@ -30,7 +29,6 @@ void main() {
 
         expect(parsedData.quantity, mockPriceQuantities[i].quantity);
         expect(parsedData.price, mockPriceQuantities[i].price);
-        expect(parsedData.type, mockPriceQuantities[i].type);
       });
     }
   

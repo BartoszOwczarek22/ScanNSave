@@ -1,6 +1,7 @@
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:scan_n_save/models/receipt.dart';
 import 'package:dart_levenshtein/dart_levenshtein.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ReceiptItemPositioned extends ReceiptItem {
   final TextLine line;
@@ -9,22 +10,19 @@ class ReceiptItemPositioned extends ReceiptItem {
     required String name,
     required double quantity,
     required double price,
-    required productType type,
     required this.line,
-  }) : super(name: name, quantity: quantity, price: price, type: type);
+  }) : super(name: name, quantity: quantity, price: price);
 }
 
 class ProductParams {
   final TextLine line;
   final double quantity;
   final double price;
-  final productType type;
 
   ProductParams({
     required TextLine this.line,
     required double this.quantity,
     required double this.price,
-    required productType this.type,
   });
 }
 
@@ -76,7 +74,6 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
                     name: recognizedText.blocks[i].lines[j].text,
                     quantity: 1,
                     price: 0,
-                    type: productType.perPiece,
                   ),
                 );
               }
@@ -138,15 +135,15 @@ Future<Receipt> parseTextFromImage(String imagePath) async {
       }
       itemsPos[i].quantity = productParams[paramsId].quantity;
       itemsPos[i].price = productParams[paramsId].price;
-      itemsPos[i].type = productParams[paramsId].type;
     }
   }
-
+  final User? user = FirebaseAuth.instance.currentUser;
   print("items parsed");
   return Receipt(
     storeName: storeName,
     date: date,
     items: itemsPos.cast<ReceiptItem>(),
+    userId: user?.uid ?? '',
   );
 }
 
@@ -195,7 +192,6 @@ ProductParams parsePriceQuantity(TextLine textLine) {
               line: textLine,
               quantity: 1.0,
               price: reduce,
-              type: productType.perPiece,
             );
           }
         }
@@ -226,14 +222,12 @@ ProductParams parsePriceQuantity(TextLine textLine) {
           line: textLine,
           quantity: quantity,
           price: price,
-          type: productType.perPiece,
         );
       } else {
         return ProductParams(
           line: textLine,
           quantity: quantity,
           price: price,
-          type: productType.byWeight,
         );
       }
     }
@@ -242,7 +236,6 @@ ProductParams parsePriceQuantity(TextLine textLine) {
     line: textLine,
     quantity: 0.0,
     price: 0.0,
-    type: productType.perPiece,
   );
 }
 

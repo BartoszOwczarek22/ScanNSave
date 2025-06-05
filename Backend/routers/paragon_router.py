@@ -3,7 +3,6 @@ from models.paragon import (
     ParagonInput, ParagonListResponse, 
 )
 from services.paragon_service import (
-    save_paragon_to_db, 
     get_paragons_for_user, 
     get_paragon_by_id,
     get_paragons_in_date_range
@@ -12,17 +11,6 @@ from typing import Optional
 
 router = APIRouter(prefix="/paragon", tags=["paragon"])
 
-@router.post("/save-to-db")
-def save_paragon(paragon: ParagonInput):
-    """
-    Zapisuje paragon do bazy danych wraz z indeksami
-    """
-    result = save_paragon_to_db(paragon)
-    
-    if result["success"]:
-        return {"message": "Paragon został zapisany pomyślnie", "data": result["data"]}
-    else:
-        raise HTTPException(status_code=400, detail=result["error"])
 
 @router.get("/list")
 def get_user_paragons(

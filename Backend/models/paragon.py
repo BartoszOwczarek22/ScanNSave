@@ -9,15 +9,16 @@ class ParagonItem(BaseModel):
     product_id: Optional[int] = None  
 
 class ReceiptIndeksItem(BaseModel):
-    indeks: str
+    indeks: str  # Nazwa produktu
     price: float
     product_id: Optional[int] = None
     shop_id: Optional[int] = None
 
 class ParagonInput(BaseModel):
-    creator_id: str  # Firebase UID
+    token: str  #
     date: str
-    shop_parcel_id: int
+    shop_name: str  
+    location: Optional[str] = None 
     sum_price: float
     pic_path: Optional[str] = None
     receipt_indekses: List[ReceiptIndeksItem]
