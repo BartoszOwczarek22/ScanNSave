@@ -2,7 +2,7 @@ from services.db import supabase_client
 from models.receipt_model import Receipt, ReceiptItem
 from services.paragon_service import (
     get_user_id_by_token, 
-    get_existing_shop_parcel,  # ZMIANA: Używamy get_existing_shop_parcel zamiast get_or_create_shop_parcel
+    get_existing_shop_parcel, 
     get_or_create_product
 )
 from typing import Dict, Any
@@ -19,19 +19,18 @@ def save_receipt_to_db(receipt: Receipt) -> Dict[str, Any]:
         
         user_id = user_result["user_id"]
         
-        # ZMIANA: Używamy get_existing_shop_parcel zamiast get_or_create_shop_parcel
         shop_result = get_existing_shop_parcel(receipt.storeName, location=None)
         if not shop_result["success"]:
             return {"success": False, "error": f"Błąd sklepu: {shop_result['error']}"}
         
         shop_parcel_id = shop_result["shop_parcel_id"]
-        shop_id = shop_result["shop_id"]  # ZMIANA: Pobieramy prawdziwe shop_id z tabeli shops
+        shop_id = shop_result["shop_id"]  
         
         # Zapisz główny paragon do tabeli receipts
         receipt_data = {
             "creator_id": user_id,
             "date": receipt.date,
-            "shop_parcel_id": shop_parcel_id,
+            "shop_id": shop_parcel_id,
             "sum_price": receipt.total,
             "pic_path": None  # Możesz rozszerzyć później
         }
@@ -46,6 +45,9 @@ def save_receipt_to_db(receipt: Receipt) -> Dict[str, Any]:
         
         # Zapisz items jako receipt_indekses
         for item in receipt.items:
+            if item.quantity == 0:
+                continue 
+
             # Pobierz lub utwórz produkt na podstawie nazwy
             product_result = get_or_create_product(item.name)
             if not product_result["success"]:
@@ -57,7 +59,6 @@ def save_receipt_to_db(receipt: Receipt) -> Dict[str, Any]:
             # Zapisz indeks - używamy całkowitej ceny za item (price * quantity)
             total_item_price = item.price * item.quantity
             
-            # POPRAWKA: Używamy shop_id z tabeli shops zamiast shop_parcel_id
             indeks_data = {
                 "indeks": item.name,
                 "price": total_item_price,

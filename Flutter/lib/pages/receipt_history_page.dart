@@ -434,7 +434,10 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
     return amount.toString();
   }
 
-  void _showReceiptDetails(Map<String, dynamic> receipt) {
+void _showReceiptDetails(Map<String, dynamic> receipt) {
+  try {
+    _debugReceiptStructure(receipt); // Debug
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -447,34 +450,8 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
               children: [
                 Text('Data: ${_formatReceiptDate(receipt)}'),
                 Text('Kwota: ${_formatPrice(receipt)}'),
-                if (receipt['items'] != null && receipt['items'] is List) ...[
-                  const SizedBox(height: 8),
-                  const Text('Produkty:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  ...(receipt['items'] as List).map((item) {
-                    if (item is Map<String, dynamic>) {
-                      final name = item['name']?.toString() ?? 'Nieznany produkt';
-                      final quantity = item['quantity'] ?? 0;
-                      final price = item['price'] ?? 0;
-                      
-                      if (quantity > 0 || price > 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text('• $name${quantity > 0 ? ' (${quantity}szt.)' : ''}${price > 0 ? ' - ${price.toString().replaceAll('.', ',')}zł' : ''}'),
-                        );
-                      } else {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text('• $name'),
-                        );
-                      }
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('• ${item.toString()}'),
-                    );
-                  }).toList(),
-                ],
+                const SizedBox(height: 12),
+                _buildItemsList(receipt),
               ],
             ),
           ),
@@ -487,7 +464,171 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
         );
       },
     );
+  } catch (e) {
+    print('Błąd podczas wyświetlania szczegółów paragonu: $e');
+    // Pokaż prosty komunikat o błędzie
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Błąd podczas wyświetlania szczegółów: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
+
+Widget _buildItemsList(Map<String, dynamic> receipt) {
+  try {
+    // Sprawdź czy items istnieje i jest listą
+    final items = receipt['items'];
+    
+    if (items == null) {
+      print('Items is null');
+      return const Text(
+        'Brak szczegółów produktów',
+        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+      );
+    }
+    
+    if (items is! List) {
+      print('Items is not a List, type: ${items.runtimeType}');
+      return const Text(
+        'Nieprawidłowy format danych produktów',
+        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+      );
+    }
+    
+    if (items.isEmpty) {
+      print('Items list is empty');
+      return const Text(
+        'Brak produktów w paragonie',
+        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+      );
+    }
+    
+    print('Found ${items.length} items');
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Produkty:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        // Użyj Column zamiast ListView dla małej liczby elementów
+        if (items.length <= 10)
+          ...items.asMap().entries.map((entry) {
+            try {
+              final index = entry.key;
+              final item = entry.value;
+              print('Processing item $index: $item');
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: _buildItemWidget(item, index),
+              );
+            } catch (e) {
+              print('Error processing item ${entry.key}: $e');
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '• Błąd odczytu produktu #${entry.key + 1}',
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                ),
+              );
+            }
+          }).toList()
+        else
+          // Dla dużej liczby produktów użyj Container z ograniczoną wysokością
+          SizedBox(
+            width: double.maxFinite,
+            height: 250,
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: items.asMap().entries.map((entry) {
+                    try {
+                      final index = entry.key;
+                      final item = entry.value;
+                      print('Processing item $index: $item');
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _buildItemWidget(item, index),
+                      );
+                    } catch (e) {
+                      print('Error processing item ${entry.key}: $e');
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          '• Błąd odczytu produktu #${entry.key + 1}',
+                          style: const TextStyle(color: Colors.red, fontSize: 14),
+                        ),
+                      );
+                    }
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  } catch (e) {
+    print('Error in _buildItemsList: $e');
+    return Text(
+      'Błąd podczas ładowania listy produktów: $e',
+      style: const TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
+    );
+  }
+}
+
+Widget _buildItemWidget(dynamic item, int index) {
+  try {
+    String itemText = '• ';
+    
+    if (item is Map<String, dynamic>) {
+      final name = item['name']?.toString() ?? 
+                  item['indeks']?.toString() ?? 
+                  'Nieznany produkt';
+      
+      itemText += name;
+      
+      // Dodaj ilość jeśli istnieje
+      final quantity = item['quantity'];
+      if (quantity != null && quantity.toString() != '0' && quantity.toString() != '') {
+        itemText += ' (${quantity}szt.)';
+      }
+      
+      // Dodaj cenę jeśli istnieje
+      final price = item['price'];
+      if (price != null && price.toString() != '0' && price.toString() != '') {
+        String formattedPrice = price.toString().replaceAll('.', ',');
+        if (!formattedPrice.contains('zł')) {
+          formattedPrice += ' zł';
+        }
+        itemText += ' - $formattedPrice';
+      }
+    } else if (item is String) {
+      itemText += item;
+    } else {
+      itemText += item.toString();
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Text(
+        itemText,
+        style: const TextStyle(fontSize: 14),
+      ),
+    );
+  } catch (e) {
+    print('Error in _buildItemWidget for item $index: $e');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Text(
+        '• Produkt #${index + 1} (błąd odczytu)',
+        style: const TextStyle(color: Colors.orange, fontSize: 14),
+      ),
+    );
+  }
+}
 
   String formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
@@ -531,4 +672,24 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
       },
     );
   }
+}
+
+void _debugReceiptStructure(Map<String, dynamic> receipt) {
+  print('=== DEBUG: Receipt Structure ===');
+  print('Keys: ${receipt.keys.toList()}');
+  
+  receipt.forEach((key, value) {
+    print('$key: ${value.runtimeType} = $value');
+    
+    if (key == 'items' && value is List) {
+      print('  Items count: ${value.length}');
+      for (int i = 0; i < value.length && i < 3; i++) {
+        print('  Item $i: ${value[i].runtimeType} = ${value[i]}');
+        if (value[i] is Map) {
+          print('    Item $i keys: ${(value[i] as Map).keys.toList()}');
+        }
+      }
+    }
+  });
+  print('=== END DEBUG ===');
 }

@@ -154,7 +154,7 @@ def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
         receipt_data = {
             "creator_id": user_id,
             "date": paragon_data.date,
-            "shop_parcel_id": shop_parcel_id,
+            "shop_id": shop_id,
             "sum_price": paragon_data.sum_price,
             "pic_path": paragon_data.pic_path
         }

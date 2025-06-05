@@ -72,9 +72,43 @@ Future<Map<String, dynamic>> getParagons({
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
     
+    // Przekształć dane do formatu oczekiwanego przez aplikację
+    List<Map<String, dynamic>> transformedParagons = [];
+    
+    for (var paragon in data['paragons']) {
+      Map<String, dynamic> transformedParagon = {
+        'id': paragon['id'],
+        'storeName': paragon['shop_name'], // Zmapuj shop_name na storeName
+        'store_name': paragon['shop_name'], // Zachowaj też oryginalną nazwę
+        'date': paragon['date'],
+        'purchase_date': paragon['date'], // Dodaj alternatywną nazwę
+        'total': paragon['sum_price'], // Zmapuj sum_price na total
+        'total_amount': paragon['sum_price'], // Dodaj alternatywną nazwę
+        'price': paragon['sum_price'], // Dodaj trzecią alternatywę
+        'location': paragon['location'],
+        'create_date': paragon['create_date'],
+        'items': [], // Przekształć receipt_indekses na items
+      };
+      
+      // Przekształć receipt_indekses na items
+      if (paragon['receipt_indekses'] != null && paragon['receipt_indekses'] is List) {
+        List<Map<String, dynamic>> items = [];
+        for (var indeks in paragon['receipt_indekses']) {
+          items.add({
+            'name': indeks['indeks'], // nazwa produktu
+            'price': indeks['price'], // cena
+            'quantity': indeks['quantity'] ?? 1, // ilość (domyślnie 1)
+          });
+        }
+        transformedParagon['items'] = items;
+      }
+      
+      transformedParagons.add(transformedParagon);
+    }
+    
     // Backend zwraca strukturę z paginacją
     return {
-      'items': data['paragons'],
+      'items': transformedParagons, // Użyj przekształconych danych
       'total_pages': data['total_pages'],
       'current_page': data['page'],
       'total_items': data['total_count'],
@@ -109,7 +143,42 @@ Future<List<Map<String, dynamic>>> getParagonsInDateRange({
 
   if (response.statusCode == 200) {
     List<dynamic> data = jsonDecode(response.body);
-    return data.cast<Map<String, dynamic>>();
+    
+    // Przekształć dane tak samo jak w getParagons
+    List<Map<String, dynamic>> transformedParagons = [];
+    
+    for (var paragon in data) {
+      Map<String, dynamic> transformedParagon = {
+        'id': paragon['id'],
+        'storeName': paragon['shop_name'],
+        'store_name': paragon['shop_name'],
+        'date': paragon['date'],
+        'purchase_date': paragon['date'],
+        'total': paragon['sum_price'],
+        'total_amount': paragon['sum_price'],
+        'price': paragon['sum_price'],
+        'location': paragon['location'],
+        'create_date': paragon['create_date'],
+        'items': [],
+      };
+      
+      // Przekształć receipt_indekses na items
+      if (paragon['receipt_indekses'] != null && paragon['receipt_indekses'] is List) {
+        List<Map<String, dynamic>> items = [];
+        for (var indeks in paragon['receipt_indekses']) {
+          items.add({
+            'name': indeks['indeks'],
+            'price': indeks['price'],
+            'quantity': indeks['quantity'] ?? 1,
+          });
+        }
+        transformedParagon['items'] = items;
+      }
+      
+      transformedParagons.add(transformedParagon);
+    }
+    
+    return transformedParagons;
   } else {
     print('Błąd przy pobieraniu paragonów w zakresie dat. Status: ${response.statusCode}');
     print('Treść odpowiedzi: ${response.body}');
