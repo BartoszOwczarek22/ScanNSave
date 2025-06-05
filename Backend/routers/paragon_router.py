@@ -4,7 +4,6 @@ from models.paragon import (
 )
 from services.paragon_service import (
     get_paragons_for_user, 
-    get_paragon_by_id,
     get_paragons_in_date_range
 )
 from typing import Optional
@@ -34,24 +33,6 @@ def get_user_paragons(
         }
     else:
         raise HTTPException(status_code=400, detail=result["error"])
-
-@router.get("/{paragon_id}")
-def get_paragon_details(
-    paragon_id: int,
-    user_id: str = Query(..., description="Firebase UID użytkownika")
-):
-    """
-    Pobiera szczegóły konkretnego paragonu z indeksami
-    """
-    result = get_paragon_by_id(paragon_id, user_id)
-    
-    if result["success"]:
-        return result["paragon"]
-    else:
-        if "nie został znaleziony" in result["error"]:
-            raise HTTPException(status_code=404, detail=result["error"])
-        else:
-            raise HTTPException(status_code=400, detail=result["error"])
 
 @router.get("/date-range/")
 def get_paragons_by_date_range(
