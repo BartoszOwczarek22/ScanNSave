@@ -1,7 +1,4 @@
 from fastapi import APIRouter, HTTPException, Query
-from models.paragon import (
-    ParagonInput, ParagonListResponse, 
-)
 from services.paragon_service import (
     get_paragons_for_user, 
     get_paragons_in_date_range

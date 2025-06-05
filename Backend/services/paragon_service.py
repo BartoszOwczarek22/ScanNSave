@@ -1,8 +1,6 @@
 from services.db import supabase_client
-from models.paragon import ParagonInput, ParagonResponse, ReceiptIndeksItem
-from typing import List, Dict, Any, Optional
-import json
-
+from models.paragon import ParagonInput
+from typing import Dict, Any, Optional
 
 def get_shop_name(item: Dict[str, Any]) -> str:
     try:
@@ -29,7 +27,7 @@ def get_user_id_by_token(firebase_uid: str) -> Dict[str, Any]:
 
 def get_existing_shop_parcel(shop_name: str, location: str = None) -> Dict[str, Any]:
     """
-    Pobiera istniejący shop_parcel na podstawie nazwy sklepu (nie tworzy nowego)
+    Pobiera istniejący shop_parcel na podstawie nazwy sklepu
     """
     try:
         # Sprawdzamy czy sklep istnieje w tabeli shops (case-insensitive)
@@ -69,14 +67,6 @@ def get_existing_shop_parcel(shop_name: str, location: str = None) -> Dict[str, 
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# STARA FUNKCJA - zastąpiona przez get_existing_shop_parcel()
-def get_or_create_shop_parcel(shop_name: str, location: str = None) -> Dict[str, Any]:
-    """
-    DEPRECATED: Używaj get_existing_shop_parcel() zamiast tej funkcji
-    Ta funkcja została zastąpiona żeby uniknąć tworzenia nowych sklepów z losowymi ID
-    """
-    print("OSTRZEŻENIE: get_or_create_shop_parcel() jest deprecated. Użyj get_existing_shop_parcel()")
-    return get_existing_shop_parcel(shop_name, location)
 
 def get_or_create_product(product_name: str, category_name: str = None) -> Dict[str, Any]:
     """
@@ -177,12 +167,11 @@ def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
             else:
                 product_id = product_result["product_id"]
             
-            # POPRAWKA: Używamy shop_id z tabeli shops zamiast shop_parcel_id
             indeks_data = {
                 "indeks": indeks_item.indeks,
                 "price": indeks_item.price,
                 "product_id": product_id,
-                "shop_id": shop_id  # To jest prawdziwe shop_id z tabeli shops, nie shop_parcel_id
+                "shop_id": shop_id  
             }
             
             # Zapisujemy indeks
@@ -195,7 +184,7 @@ def save_paragon_to_db(paragon_data: ParagonInput) -> Dict[str, Any]:
                 connect_data = {
                     "receipt_id": receipt_id,
                     "receipt_indeks_id": indeks_id,
-                    "quantity": 1  # Domyślnie 1, można rozszerzyć
+                    "quantity": 1  
                 }
                 
                 supabase_client.table("receipt_connect_indekses").insert(connect_data).execute()
