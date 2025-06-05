@@ -41,14 +41,25 @@ class ReceiptScanningPage extends ConsumerWidget {
             ),
           ),
       data: (receipt) {
+        // Ustaw domyślne wartości jeśli są puste lub null
+        Receipt defaultReceipt = receipt.copyWith(
+          storeName: receipt.storeName?.isEmpty != false ? 'Biedronka' : receipt.storeName,
+          date: receipt.date?.isEmpty != false ? _getCurrentDate() : receipt.date,
+        );
+        
         return ProviderScope(
           overrides: [
-            receiptProvider.overrideWith((ref) => ReceiptNotifier(receipt)),
+            receiptProvider.overrideWith((ref) => ReceiptNotifier(defaultReceipt)),
           ],
           child: ReceiptDetailsPage(),
         );
       },
     );
+  }
+  
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
   }
 }
 
@@ -203,61 +214,128 @@ class ReceiptDetailsPage extends ConsumerWidget {
     WidgetRef ref,
     String storeName,
     String date,
-  ) {
-    TextEditingController storeNameInputControler = TextEditingController();
-    storeNameInputControler.text = storeName;
+  ) async {
+    // Pobierz listę dostępnych sklepów
+    final apiService = ApiService();
+    List<String> availableShops = [];
+    
+    try {
+      availableShops = await apiService.getAvailableShops();
+    } catch (e) {
+      print('Błąd przy pobieraniu sklepów: $e');
+      // Użyj domyślnej listy w przypadku błędu
+      availableShops = [
+        'Biedronka',
+        'Żabka', 
+        'Lidl',
+        'Kaufland',
+        'Carrefour',
+        'Tesco',
+        'Auchan',
+        'Netto',
+        'Intermarché',
+        'Stokrotka'
+      ];
+    }
+
+    String selectedShop = availableShops.contains(storeName) ? storeName : availableShops.first;
     DateTime? pickedDate;
+
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text("Edytuj"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: storeNameInputControler,
-                  decoration: const InputDecoration(
-                    labelText: 'Sklep',
-                    border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text("Edytuj paragon"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Dropdown dla wyboru sklepu
+              const Text('Sklep:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedShop,
+                    isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down),
+                    items: availableShops.map((String shop) {
+                      return DropdownMenuItem<String>(
+                        value: shop,
+                        child: Text(shop),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedShop = newValue;
+                        });
+                      }
+                    },
                   ),
                 ),
-                OutlinedButton(
-                  onPressed: () async {
-                    pickedDate = await showDatePicker(
-                      lastDate: DateTime.now(),
-                      firstDate: DateTime.fromMillisecondsSinceEpoch(0),
-                      context: context,
-                    );
-                  },
-                  child: Text("wybierz datę"),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => {Navigator.of(context).pop()},
-                child: Text("Anuluj"),
               ),
-              TextButton(
-                onPressed: () {
-                  ref
-                      .read(receiptProvider.notifier)
-                      .udateStoreName(storeNameInputControler.text);
-                  if (pickedDate != null) {
-                    ref
-                        .read(receiptProvider.notifier)
-                        .updateDate(
-                          "${pickedDate!.year}-${pickedDate!.month}-${pickedDate!.day}",
-                        );
-                  }
-                  Navigator.of(context).pop();
-                },
-                child: Text("Zapisz"),
+              const SizedBox(height: 16),
+              
+              // Button do wyboru daty
+              const Text('Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        pickedDate = picked;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    pickedDate != null 
+                      ? "${pickedDate!.day.toString().padLeft(2, '0')}-${pickedDate!.month.toString().padLeft(2, '0')}-${pickedDate!.year}"
+                      : "Wybierz datę (aktualna: $date)",
+                  ),
+                ),
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Anuluj"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Aktualizuj nazwę sklepu
+                ref.read(receiptProvider.notifier).udateStoreName(selectedShop);
+                
+                // Aktualizuj datę jeśli została wybrana
+                if (pickedDate != null) {
+                  ref.read(receiptProvider.notifier).updateDate(
+                    "${pickedDate!.year}-${pickedDate!.month.toString().padLeft(2, '0')}-${pickedDate!.day.toString().padLeft(2, '0')}",
+                  );
+                }
+                
+                Navigator.of(context).pop();
+              },
+              child: const Text("Zapisz"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

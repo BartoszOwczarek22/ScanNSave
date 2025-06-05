@@ -410,7 +410,7 @@ class NotchMenu extends StatelessWidget {
                 children: [
                   BottomMenuButton(
                     icon: Icons.receipt_outlined,
-                    label: 'Historia',
+                    label: 'Paragony',
                     onPressed: () {
                       Navigator.push(
                         context,

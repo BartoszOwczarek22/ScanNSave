@@ -6,6 +6,32 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8000'; 
 
+  List<String> defaultShops = [
+        'Biedronka','Żabka', 'Lidl','Kaufland','Carrefour','Auchan',
+        'Netto','Intermarche','Stokrotka','Inne'
+      ];
+
+  Future<List<String>> getAvailableShops() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/shops/list'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((shop) => shop['name'].toString()).toList();
+      } else {
+        print('Błąd przy pobieraniu sklepów. Status: ${response.statusCode}');
+        return defaultShops;
+      }
+    } catch (e) {
+      print('Błąd przy pobieraniu sklepów: $e');
+      return defaultShops;
+    }
+  }
 
   Future<void> sendUserToken() {
     final User? user = FirebaseAuth.instance.currentUser;
