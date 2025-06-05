@@ -288,4 +288,34 @@ Future<Map<String, dynamic>> getParagonById(int paragonId) async {
       throw Exception("Błąd: ${response.body}");
     }
   }
+
+  Future<double> getExpensesByMonth(String userId) async {
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, 1);
+    final endDate = DateTime(now.year, now.month + 1, 0);
+
+    final url = '$baseUrl/api/stats/months'
+        '?user_id=$userId'
+        '&start_date=${startDate.toIso8601String().split("T")[0]}'
+        '&end_date=${endDate.toIso8601String().split("T")[0]}';
+
+    final response = await http.get(Uri.parse(url), headers: {
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List && data.isNotEmpty) {
+        return (data.first['total'] ?? 0.0).toDouble();
+      } else {
+        return 0.0;
+      }
+    } else {
+      print('Błąd: status ${response.statusCode}, body: ${response.body}');
+      throw Exception("Błąd: ${response.body}");
+    }
+  }
+
 }
+
+

@@ -11,6 +11,7 @@ import 'package:scan_n_save/pages/receipt_history_page.dart';
 import 'package:scan_n_save/stats/main_dashboard.dart';
 import 'package:scan_n_save/stats/store_comparison.dart';
 import 'package:scan_n_save/sharedprefsnotifier.dart';
+import 'package:scan_n_save/api_service.dart';
 
 // Sample data - just for MVP
 
@@ -36,7 +37,8 @@ final shoppingListsProvider = Provider<List<Map<String, dynamic>>>((ref) => [
 ]);
 
 final savedAmountProvider = Provider<double>((ref) => 124.50);
-final monthlySpendingProvider = Provider<double>((ref) => 843.27);
+double _actualMonthlySpending = 0.0;
+bool _isLoadingSpending = true;
 
 final comparisonDataProvider = Provider<List<Map<String, dynamic>>>((ref) => [
   {
@@ -75,8 +77,28 @@ class HomePageState extends ConsumerState<HomePage> {
           MaterialPageRoute(builder: (context) => EmailVerificationPage()),
         );
       }
+      _loadMonthlySpending();
     });
   }
+
+
+Future<void> _loadMonthlySpending() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final spending = await ApiService().getExpensesByMonth(user.uid);
+
+    if (mounted) {
+      setState(() {
+        _actualMonthlySpending = spending;
+        _isLoadingSpending = false;
+      });
+    }
+  } catch (e) {
+    print('Błąd przy pobieraniu miesięcznych wydatków: $e');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +106,6 @@ class HomePageState extends ConsumerState<HomePage> {
     final recentReceipts = ref.watch(recentReceiptsProvider);
     final shoppingLists = ref.watch(shoppingListsProvider);
     final savedAmount = ref.watch(savedAmountProvider);
-    final monthlySpending = ref.watch(monthlySpendingProvider);
     final comparisonData = ref.watch(comparisonDataProvider);
 
     return Scaffold(
@@ -103,10 +124,14 @@ class HomePageState extends ConsumerState<HomePage> {
                   // Stats
                   Row(
                     children: [
-                      _buildStatCard('W tym miesiącu', '\$${monthlySpending.toStringAsFixed(2)}',
-                          'Łączne wydatki', Colors.blue),
+                      _buildStatCard(
+                        'W tym miesiącu',
+                        _isLoadingSpending ? '...' : '${_actualMonthlySpending.toStringAsFixed(2)} zł',
+                        'Łączne wydatki',
+                        Colors.blue,
+                      ),
                       const SizedBox(width: 12),
-                      _buildStatCard('Zaoszczędzono', '\$${savedAmount.toStringAsFixed(2)}',
+                      _buildStatCard('Zaoszczędzono', '${savedAmount.toStringAsFixed(2)} zł',
                           'Z porównywarką cen', Colors.green),
                     ],
                   ),
