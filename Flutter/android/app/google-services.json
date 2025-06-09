@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109850156214",
+    "project_id": "scan-n-save-420f9",
+    "storage_bucket": "scan-n-save-420f9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109850156214:android:36a4685cf84272d0abda17",
+        "android_client_info": {
+          "package_name": "com.example.scan_n_save"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALhhbh2ROwtK5RYZAp0ObfpuseTshy4Mk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
