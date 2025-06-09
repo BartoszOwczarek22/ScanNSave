@@ -111,6 +111,19 @@ Future<void> _loadMonthlySpending() async {
     return Scaffold(
       appBar: AppBar(
         title: SvgPicture.asset('assets/icons/logo.svg', colorFilter: ColorFilter.mode(Color.fromARGB(255, 99, 171, 243), BlendMode.srcIn),height: 30,),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(),
+                )
+              );
+            },
+          )
+        ],
       ),
       body: Stack(
         children: [
@@ -471,13 +484,13 @@ class NotchMenu extends StatelessWidget {
                     },
                   ),
                   BottomMenuButton(
-                    icon: Icons.account_circle_outlined,
-                    label: 'Konto',
+                    icon: Icons.bar_chart,
+                    label: 'Porównywaj \nceny',
                     onPressed: () => {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SettingsPage(),
+                          builder: (context) => PriceComparisonScreen(),
                         ),
                       )
                     },
@@ -540,7 +553,7 @@ class BottomMenuButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: baseSize * 0.06, color: Color.fromRGBO(70, 70, 70, 1.0),),
-          Text(label, style: TextStyle(color: Color.fromRGBO(70, 70, 70, 1.0)),)
+          Text(label,textAlign: TextAlign.center ,style: TextStyle(color: Color.fromRGBO(70, 70, 70, 1.0)),)
         ],
       ),
     );
