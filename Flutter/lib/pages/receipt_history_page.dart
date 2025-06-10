@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scan_n_save/pages/home_page.dart';
 import 'package:scan_n_save/pages/camera_page.dart';
 import 'package:scan_n_save/api_service.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 class ReceiptHistoryPage extends StatefulWidget {
   const ReceiptHistoryPage({super.key});
@@ -193,108 +194,112 @@ class _ReceiptHistoryPageState extends State<ReceiptHistoryPage> {
     loadReceipts();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final rangeText = selectedDateRange == null
-        ? 'Wybierz zakres dat'
-        : '${formatDate(selectedDateRange!.start)} - ${formatDate(selectedDateRange!.end)}';
+@override
+Widget build(BuildContext context) {
+  final rangeText = selectedDateRange == null
+      ? 'Wybierz zakres dat'
+      : '${formatDate(selectedDateRange!.start)} - ${formatDate(selectedDateRange!.end)}';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historia zakupów'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Historia zakupów'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+           Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        },
+    ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      onPressed: refreshReceipts,
+      tooltip: 'Odśwież',
+
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: refreshReceipts,
-            tooltip: 'Odśwież',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Filtry i sortowanie
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.date_range),
-                        onPressed: pickDateRange,
-                        label: Text(rangeText),
+      ],
+    ),
+    body: Stack(
+      children: [
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.date_range),
+                          onPressed: pickDateRange,
+                          label: Text(rangeText),
+                        ),
                       ),
-                    ),
-                    if (selectedDateRange != null) ...[
-                      const SizedBox(width: 8),
+                      if (selectedDateRange != null) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: clearDateFilter,
+                          tooltip: 'Wyczyść filtr dat',
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: selectedSort,
+                          isExpanded: true,
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                selectedSort = value;
+                              });
+                            }
+                          },
+                          items: ['Data', 'Cena', 'Sklep'].map((option) {
+                            return DropdownMenuItem<String>(
+                              value: option,
+                              child: Text('Sortuj po $option'),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                       IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: clearDateFilter,
-                        tooltip: 'Wyczyść filtr dat',
+                        icon: Icon(
+                          ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: Colors.blue,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            ascending = !ascending;
+                          });
+                        },
+                        tooltip: ascending ? 'Rosnąco' : 'Malejąco',
                       ),
                     ],
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButton<String>(
-                        value: selectedSort,
-                        isExpanded: true,
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedSort = value;
-                            });
-                          }
-                        },
-                        items: ['Data', 'Cena', 'Sklep'].map((option) {
-                          return DropdownMenuItem<String>(
-                            value: option,
-                            child: Text('Sortuj po $option'),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        ascending ? Icons.arrow_upward : Icons.arrow_downward,
-                        color: Colors.blue,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          ascending = !ascending;
-                        });
-                      },
-                      tooltip: ascending ? 'Rosnąco' : 'Malejąco',
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          
-          // Lista paragonów
-          Expanded(
-            child: _buildReceiptsList(),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showScanReceiptDialog();
-        },
-        child: const Icon(Icons.add_a_photo),
-        tooltip: 'Zeskanuj nowy paragon',
-      ),
-    );
-  }
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 90), // Dodaj margines dla menu
+                child: _buildReceiptsList(),
+              ),
+            ),
+          ],
+        ),
+        const NotchMenu(),
+      ],
+    ),
+  );
+}
 
   Widget _buildReceiptsList() {
     if (isLoading && allReceipts.isEmpty) {

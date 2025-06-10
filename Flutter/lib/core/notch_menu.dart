@@ -40,24 +40,30 @@ class NotchMenu extends ConsumerWidget {
                     icon: Icons.receipt_outlined,
                     label: 'Paragony',
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReceiptHistoryPage(), 
-                        ),
-                      );
+                      if (ModalRoute.of(context)?.settings.name != '/receipt-history') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReceiptHistoryPage(),
+                            settings: RouteSettings(name: '/receipt-history'),
+                          ),
+                        );
+                      }
                     },
                   ),
                   BottomMenuButton(
                     icon: Icons.insert_chart_outlined_rounded,
                     label: 'Statystyki',
                     onPressed: () => {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ExpenseStatisticsScreen()
-                        ),
-                      )
+                      if (ModalRoute.of(context)?.settings.name != '/statistics') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ExpenseStatisticsScreen(),
+                            settings: RouteSettings(name: '/statistics'),
+                          ),
+                        )
+                      }
                     },
                   ),
                   SizedBox(width: baseSize * 0.1),
@@ -65,24 +71,30 @@ class NotchMenu extends ConsumerWidget {
                     icon: Icons.checklist_rtl_rounded,
                     label: 'Listy',
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShoppingListsPage(),
-                        ),
-                      );
+                       if (ModalRoute.of(context)?.settings.name != '/shopping-lists') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShoppingListsPage(),
+                            settings: RouteSettings(name: '/shopping-lists'),
+                          ),
+                        );
+                      }
                     },
                   ),
                   BottomMenuButton(
                     icon: Icons.bar_chart,
                     label: 'Porównywaj \nceny',
                     onPressed: () => {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PriceComparisonScreen(),
-                        ),
-                      )
+                      if (ModalRoute.of(context)?.settings.name != '/price-comparison') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PriceComparisonScreen(),
+                            settings: RouteSettings(name: '/price-comparison'),
+                          ),
+                        )
+                      }
                     },
                   ),
                 ],

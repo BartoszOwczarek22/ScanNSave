@@ -6,6 +6,7 @@ import 'package:scan_n_save/stats/widgets/filters_section.dart';
 import 'package:scan_n_save/stats/widgets/legend_section.dart';
 import 'package:scan_n_save/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 
 class ExpenseStatisticsScreen extends StatefulWidget {
@@ -165,60 +166,85 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
     final totalExpense = displayData.fold(0.0, (sum, item) => sum + item.amount);
     
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Statystyki wydatków'),
-      ),
-      body: SafeArea(
-        child: _isLoading ? const Center(child: CircularProgressIndicator()) : _errorMessage != null ? _buildErrorWidget():
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                // Filtry
-                FiltersSection(currentFilterType: _currentFilterType, years: _years, months: _months, selectedYear: _selectedYear, selectedMonth: _selectedMonth, onFilterTypeChanged: (type) {
-                  if (!mounted) return;
-                  setState(() {
-                    _currentFilterType = type;
-                  });
-                  _loadData();
-                }, onYearChanged: (year){
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedYear = year;
-                  });
-                  _loadData();
-                }, onMonthChanged: (month){
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedMonth = month;
-                  });
-                  _loadData();
-                }),
+    appBar: AppBar(
+      title: const Text('Statystyki wydatków'),
+    ),
+    body: Stack(
+      children: [
+        // Main content with bottom padding for menu
+        Padding(
+          padding: const EdgeInsets.only(bottom: 90), // Space for bottom menu
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator()) 
+            : _errorMessage != null 
+              ? _buildErrorWidget()
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Filtry
+                      FiltersSection(
+                        currentFilterType: _currentFilterType, 
+                        years: _years, 
+                        months: _months, 
+                        selectedYear: _selectedYear, 
+                        selectedMonth: _selectedMonth, 
+                        onFilterTypeChanged: (type) {
+                          if (!mounted) return;
+                          setState(() {
+                            _currentFilterType = type;
+                          });
+                          _loadData();
+                        }, 
+                        onYearChanged: (year){
+                          if (!mounted) return;
+                          setState(() {
+                            _selectedYear = year;
+                          });
+                          _loadData();
+                        }, 
+                        onMonthChanged: (month){
+                          if (!mounted) return;
+                          setState(() {
+                            _selectedMonth = month;
+                          });
+                          _loadData();
+                        }
+                      ),
+                      
+                      // Podsumowanie
+                      StatsSummary(
+                        totalExpense: totalExpense, 
+                        receiptCount: _totalReceipts, 
+                        displayMonth: '${_selectedMonth == 'Wszystkie' ? 'Wszystkie z' : _selectedMonth} $_selectedYear', 
+                        odmienParagon: _odmienParagon
+                      ),
+                      
+                      // Pie chart
+                      displayData.isEmpty 
+                        ? _buildNoDataWidget() 
+                        : Column(
+                            children: [
+                              SizedBox(
+                                height: 300,
+                                child: _buildPieChart(displayData),
+                              ),
+                            ],
+                          ),
+                      
+                      // Legenda
+                      StatsLegend(data: displayData, title: _currentFilterType),
                 
-                // Podsumowanie
-                StatsSummary(totalExpense: totalExpense, receiptCount: _totalReceipts, displayMonth: '${_selectedMonth == 'Wszystkie' ? 'Wszystkie z' : _selectedMonth} $_selectedYear', odmienParagon: _odmienParagon),
-                
-                // Pie chart
-                displayData.isEmpty ? _buildNoDataWidget() :
-                Column(
-                  children: [
-                    SizedBox(
-                      height: 300,
-                      child: _buildPieChart(displayData),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
-                
-                // Legenda
-                StatsLegend(data: displayData, title: _currentFilterType),
-          
-                const SizedBox(height: 80),
-          
-              ],
-            ),
-          ),
         ),
-    );
-  }
+        // Bottom menu
+        const NotchMenu(),
+      ],
+    ),
+  );
+}
   Widget _buildErrorWidget() {
     return Center(
       child: Padding(

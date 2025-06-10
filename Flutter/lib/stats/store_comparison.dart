@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:scan_n_save/pages/home_page.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 class PriceComparisonScreen extends StatefulWidget{
   const PriceComparisonScreen({Key? key}) : super(key: key);
@@ -116,26 +117,44 @@ class _PriceComparisonScreenState extends State<PriceComparisonScreen> with Tick
     @override
     Widget build(BuildContext context) {
       return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));}, icon: const Icon(Icons.arrow_back)),
-          title: const Text('Porównywarka cen'),
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(icon: Icon(Icons.compare_arrows), text: 'Porównaj ceny',),
-              Tab(icon: Icon(Icons.trending_down), text: 'Najlepsze okazje',)
-            ],
-          ),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: (){
+            Navigator.pushReplacement(
+              context, 
+              MaterialPageRoute(builder: (context) => HomePage())
+            );
+          }, 
+          icon: const Icon(Icons.arrow_back)
         ),
-        body: TabBarView(
+        title: const Text('Porównywarka cen'),
+        bottom: TabBar(
           controller: _tabController,
-          children: [
-            _buildComparisonTab(),
-            _buildBestDealsTab(),
+          tabs: const [
+            Tab(icon: Icon(Icons.compare_arrows), text: 'Porównaj ceny',),
+            Tab(icon: Icon(Icons.trending_down), text: 'Najlepsze okazje',)
           ],
         ),
-      );
-    }
+      ),
+      body: Stack(
+        children: [
+          // Main content with bottom padding for menu
+          Padding(
+            padding: const EdgeInsets.only(bottom: 90), // Space for bottom menu
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildComparisonTab(),
+                _buildBestDealsTab(),
+              ],
+            ),
+          ),
+          // Bottom menu
+          const NotchMenu(),
+        ],
+      ),
+    );
+  }
 
     Widget _buildComparisonTab(){
       return Column(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scan_n_save/pages/home_page.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 class ShoppingListsPage extends StatelessWidget {
   const ShoppingListsPage({Key? key}) : super(key: key);
@@ -14,43 +15,46 @@ class ShoppingListsPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Twoje listy zakupów'),
-          leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => HomePage()), ),
-        )
+    appBar: AppBar(
+      title: const Text('Twoje listy zakupów'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        ),
       ),
-      body: ListView.builder(
-        itemCount: shoppingLists.length,
-        itemBuilder: (context, index) {
-          final list = shoppingLists[index];
-          return ListTile(
-            leading: const Icon(Icons.list_alt),
-            title: Text(list['name'] as String),
-            subtitle: Text('Liczba produktów: ${list['items']}'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              // Przejście do szczegółów listy (do zaimplementowania)
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Otwieranie: ${list['name']}')),
+    ),
+    body: Stack(
+      children: [
+        // Zawartość strony
+        Padding(
+          padding: const EdgeInsets.only(bottom: 90), // Dodaj margines dla menu
+          child: ListView.builder(
+            itemCount: shoppingLists.length,
+            itemBuilder: (context, index) {
+              final list = shoppingLists[index];
+              return ListTile(
+                leading: const Icon(Icons.list_alt),
+                title: Text(list['name'] as String),
+                subtitle: Text('Liczba produktów: ${list['items']}'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Otwieranie: ${list['name']}')),
+                  );
+                },
               );
             },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Dodawanie nowej listy (do zaimplementowania)
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dodaj nową listę - funkcja w budowie')),
-          );
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Dodaj nową listę',
-      ),
-    );
+          ),
+        ),
+        // Dodaj NotchMenu
+        const NotchMenu(),
+      ],
+    ),
+    // Usuń floatingActionButton (funkcjonalność przeniesiona do NotchMenu)
+  );
   }
 }
 
