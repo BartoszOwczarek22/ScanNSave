@@ -85,3 +85,23 @@ def save_receipt_to_db(receipt: Receipt) -> Dict[str, Any]:
             
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+def delete_receipt_from_db(receipt_id: int) -> dict:
+    """
+    Usuwa paragon z tabeli receipts oraz powiązany wiersz z receipt_shared.
+    """
+    try:
+        # Usuń powiązany wiersz z receipt_shared
+        supabase_client.table("receipt_shared").delete().eq("receipt_id", receipt_id).execute()
+        # Usuń powiązane indeksy z receipt_connect_indekses
+        supabase_client.table("receipt_connect_indekses").delete().eq("receipt_id", receipt_id).execute()
+        
+        # Usuń paragon z receipts
+        delete_result = supabase_client.table("receipts").delete().eq("id", receipt_id).execute()
+        
+        if delete_result.data:
+            return {"success": True, "data": delete_result.data[0]}
+        else:
+            return {"success": False, "error": "Nie znaleziono paragonu do usunięcia"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
