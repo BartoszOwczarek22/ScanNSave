@@ -4,7 +4,7 @@ import 'package:scan_n_save/models/receipt.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000'; 
+  static const String baseUrl = 'http://192.168.1.26:8000'; 
 
   List<String> defaultShops = [
         'Biedronka','Żabka', 'Lidl','Kaufland','Carrefour','Auchan',
@@ -316,6 +316,25 @@ Future<Map<String, dynamic>> getParagonById(int paragonId) async {
     }
   }
 
+  Future<void> deleteParagon(String receiptId) async {
+  final url = '$baseUrl/receipt/delete/$receiptId';
+
+  final response = await http.delete(
+    Uri.parse(url),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    // Sukces
+    return;
+  } else {
+    print('Błąd przy usuwaniu paragonu. Status: ${response.statusCode}');
+    print('Treść odpowiedzi: ${response.body}');
+    throw Exception('Błąd przy usuwaniu paragonu');
+  }
+}
 }
 
 

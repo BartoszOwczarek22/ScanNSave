@@ -441,8 +441,8 @@ Widget build(BuildContext context) {
 
 void _showReceiptDetails(Map<String, dynamic> receipt) {
   try {
-    _debugReceiptStructure(receipt); // Debug
-    
+    _debugReceiptStructure(receipt);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -461,6 +461,14 @@ void _showReceiptDetails(Map<String, dynamic> receipt) {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              tooltip: 'Usuń paragon',
+              onPressed: () {
+                Navigator.pop(context); // Zamknij szczegóły
+                _showDeleteConfirmation(receipt);
+              },
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Zamknij'),
@@ -471,13 +479,65 @@ void _showReceiptDetails(Map<String, dynamic> receipt) {
     );
   } catch (e) {
     print('Błąd podczas wyświetlania szczegółów paragonu: $e');
-    // Pokaż prosty komunikat o błędzie
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Błąd podczas wyświetlania szczegółów: $e'),
         backgroundColor: Colors.red,
       ),
     );
+  }
+}
+
+void _showDeleteConfirmation(Map<String, dynamic> receipt) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Usuń paragon'),
+        content: const Text('Czy na pewno chcesz usunąć ten paragon? Tej operacji nie można cofnąć.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Zamknij potwierdzenie
+              await _deleteReceipt(receipt);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Usuń'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _deleteReceipt(Map<String, dynamic> receipt) async {
+  try {
+    final receiptId = receipt['id']?.toString() ?? receipt['receipt_id']?.toString();
+    if (receiptId == null) {
+      throw Exception('Brak ID paragonu');
+    }
+    setState(() {
+      isLoading = true;
+    });
+    await _apiService.deleteParagon(receiptId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Paragon został usunięty')),
+    );
+    await refreshReceipts();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Błąd podczas usuwania paragonu: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    setState(() {
+      isLoading = false;
+    });
   }
 }
 
