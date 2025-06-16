@@ -197,6 +197,7 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
+
               ),
             ),
           ],
@@ -392,77 +393,119 @@ class ReceiptDetailsPage extends ConsumerWidget {
     );
   }
 
-  void showAddItemDialog(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final quantityController = TextEditingController(text: "1");
+void showAddItemDialog(BuildContext context, WidgetRef ref) {
+  final nameController = TextEditingController();
+  final priceController = TextEditingController(text: "0.00");
+  final quantityController = TextEditingController(text: "1");
+  String? errorMessage;
 
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Dodaj produkt"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text("Dodaj produkt"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Nazwa produktu"),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(labelText: "Cena (zł)"),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onTap: () => priceController.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: priceController.text.length,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Nazwa produktu",
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(labelText: "Cena (zł)"),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: quantityController,
-                  decoration: const InputDecoration(labelText: "Ilość"),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                const Text("Ilość:", style: TextStyle(fontSize: 16)),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: () {
+                        final current = double.tryParse(quantityController.text) ?? 1;
+                        if (current > 1) {
+                          setState(() => quantityController.text = (current - 1).toInt().toString());
+                        }
+                      },
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: TextField(
+                        controller: quantityController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                          border: UnderlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        final current = double.tryParse(quantityController.text) ?? 1;
+                        setState(() => quantityController.text = (current + 1).toInt().toString());
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("Anuluj"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  final price =
-                      double.tryParse(
-                        priceController.text.replaceAll(',', '.'),
-                      ) ??
-                      0.0;
-                  final quantity =
-                      double.tryParse(
-                        quantityController.text.replaceAll(',', '.'),
-                      ) ??
-                      1.0;
-
-                  if (name.isNotEmpty && price > 0 && quantity > 0) {
-                    ref
-                        .read(receiptProvider.notifier)
-                        .addItem(
-                          ReceiptItem(
-                            name: name,
-                            price: price,
-                            quantity: quantity,
-                          ),
-                        );
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: const Text("Dodaj"),
+            if (errorMessage != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                errorMessage!,
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ),
             ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Anuluj"),
           ),
-    );
-  }
+          ElevatedButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              final price = double.tryParse(priceController.text.replaceAll(',', '.'));
+              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.'));
+
+              if (name.isEmpty || price == null || price <= 0 || quantity == null || quantity <= 0) {
+                setState(() {
+                  errorMessage = "Uzupełnij poprawnie wszystkie pola!";
+                });
+                return;
+              }
+
+              ref.read(receiptProvider.notifier).addItem(
+                    ReceiptItem(
+                      name: name,
+                      price: price,
+                      quantity: quantity,
+                    ),
+                  );
+              Navigator.of(context).pop();
+            },
+            child: const Text("Dodaj"),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
 
   void showEditItemDialog(
     BuildContext context,
