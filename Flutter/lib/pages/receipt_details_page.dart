@@ -70,19 +70,21 @@ class ReceiptDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final receipt = ref.watch(receiptProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Szczegóły paragonu'),
-        actions: [
-          TextButton(
-            child: const Text('Zapisz'),
-            onPressed: () {
-              ApiService apiService = ApiService();
-              apiService.sendReceiptToServer(receipt);
-              Navigator.pop(context);
-            },
+return Scaffold(
+  appBar: AppBar(
+    title: const Text('Szczegóły'),
+      actions: [
+        ElevatedButton.icon(
+          onPressed: () {
+            showAddItemDialog(context, ref);
+          },
+          icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
+          label: const Text(
+            'Dodaj produkt',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
+        ),
+      ],
       ),
       body: buildReceiptView(receipt, context, ref),
       bottomNavigationBar: BottomAppBar(
@@ -105,8 +107,8 @@ class ReceiptDetailsPage extends ConsumerWidget {
                 ],
               ),
               ElevatedButton.icon(
-                icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Dodaj produkt'),
+                icon: const Icon(Icons.save),
+                label: const Text('Zapisz paragon', style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -118,7 +120,9 @@ class ReceiptDetailsPage extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () {
-                  showAddItemDialog(context, ref);
+                  ApiService apiService = ApiService();
+                  apiService.sendReceiptToServer(receipt);
+                  Navigator.pop(context);
                 },
               ),
             ],
@@ -396,8 +400,9 @@ class ReceiptDetailsPage extends ConsumerWidget {
 void showAddItemDialog(BuildContext context, WidgetRef ref) {
   final nameController = TextEditingController();
   final priceController = TextEditingController(text: "0.00");
-  final quantityController = TextEditingController(text: "1");
-  String? errorMessage;
+  final quantityController = TextEditingController(text: "1.0");
+
+  String? errorText;
 
   showDialog(
     context: context,
@@ -409,65 +414,76 @@ void showAddItemDialog(BuildContext context, WidgetRef ref) {
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: "Nazwa produktu"),
+              decoration: const InputDecoration(
+                labelText: "Nazwa produktu",
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: priceController,
               decoration: const InputDecoration(labelText: "Cena (zł)"),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              onTap: () => priceController.selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: priceController.text.length,
-              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Ilość:", style: TextStyle(fontSize: 16)),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        final current = double.tryParse(quantityController.text) ?? 1;
-                        if (current > 1) {
-                          setState(() => quantityController.text = (current - 1).toInt().toString());
-                        }
-                      },
+                const Text(
+                  'Ilość:',
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () {
+                    double current = double.tryParse(
+                            quantityController.text.replaceAll(',', '.')) ??
+                        1.0;
+                    if (current > 1.0) {
+                      setState(() {
+                        quantityController.text = (current - 1.0).toStringAsFixed(1);
+                      });
+                    }
+                  },
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: quantityController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: UnderlineInputBorder(),
                     ),
-                    SizedBox(
-                      width: 50,
-                      child: TextField(
-                        controller: quantityController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8),
-                          border: UnderlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        final current = double.tryParse(quantityController.text) ?? 1;
-                        setState(() => quantityController.text = (current + 1).toInt().toString());
-                      },
-                    ),
-                  ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () {
+                    double current = double.tryParse(
+                            quantityController.text.replaceAll(',', '.')) ??
+                        1.0;
+                    setState(() {
+                      quantityController.text = (current + 1.0).toStringAsFixed(1);
+                    });
+                  },
                 ),
               ],
             ),
-            if (errorMessage != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                errorMessage!,
-                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+
+            if (errorText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  errorText!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ),
-            ],
           ],
         ),
         actions: [
@@ -478,12 +494,16 @@ void showAddItemDialog(BuildContext context, WidgetRef ref) {
           ElevatedButton(
             onPressed: () {
               final name = nameController.text.trim();
-              final price = double.tryParse(priceController.text.replaceAll(',', '.'));
-              final quantity = double.tryParse(quantityController.text.replaceAll(',', '.'));
+              final price = double.tryParse(
+                      priceController.text.replaceAll(',', '.')) ??
+                  0.0;
+              final quantity = double.tryParse(
+                      quantityController.text.replaceAll(',', '.')) ??
+                  0.0;
 
-              if (name.isEmpty || price == null || price <= 0 || quantity == null || quantity <= 0) {
+              if (name.isEmpty || price <= 0 || quantity <= 0) {
                 setState(() {
-                  errorMessage = "Uzupełnij poprawnie wszystkie pola!";
+                  errorText = "Uzupełnij poprawnie wszystkie pola.";
                 });
                 return;
               }
@@ -504,6 +524,8 @@ void showAddItemDialog(BuildContext context, WidgetRef ref) {
     ),
   );
 }
+
+
 
 
 
