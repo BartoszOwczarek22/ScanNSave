@@ -2,6 +2,8 @@ from services.db import supabase_client
 from models.paragon import ParagonInput
 from typing import Dict, Any, Optional
 
+from Levenshtein import distance
+
 def get_shop_name(item: Dict[str, Any]) -> str:
     try:
         return item["shops_parcels"]["shops"]["name"]
@@ -68,18 +70,28 @@ def get_existing_shop_parcel(shop_name: str, location: str = None) -> Dict[str, 
         return {"success": False, "error": str(e)}
 
 
-def get_or_create_product(product_name: str, category_name: str = None) -> Dict[str, Any]:
+def get_or_create_product(product_name: str, re_indeks_table = None, shop_id = None,  category_name: str = None) -> Dict[str, Any]:
     """
     Znajduje lub tworzy produkt na podstawie nazwy
     """
     try:
         # Sprawdzamy czy produkt istnieje
-        product_result = supabase_client.table("product")\
-            .select("id")\
-            .eq("name", product_name)\
-            .execute()
+        # product_result = supabase_client.table("product")\
+        #     .select("id")\
+        #     .eq("name", product_name)\
+        #     .execute()
+        found = False
+        found_reciept_indeks = None # jesli znaleziono w tabeli receipt_indekses że taki skrót już istnieje to tutaj jest on przechowywany
+        if re_indeks_table is not None and shop_id is not None:
+            for item in re_indeks_table:
+                if item["shop_id"] == shop_id:
+                    if item['product_id'] is not None:
+                        if distance(item["indeks"], product_name) <= 2:
+                            found = True
+                            found_reciept_indeks = item
+                            break
         
-        if not product_result.data:
+        if not found:
             # Jeśli podano kategorię, próbujemy ją znaleźć lub utworzyć
             category_id = None
             if category_name:
@@ -109,16 +121,16 @@ def get_or_create_product(product_name: str, category_name: str = None) -> Dict[
                 .execute()
             
             if not new_product.data:
-                return {"success": False, "error": f"Nie udało się utworzyć produktu: {product_name}"}
+                return {"success": False, "error": f"Nie udało się utworzyć produktu: {product_name}", "found_indeks": False}
             
             product_id = new_product.data[0]["id"]
         else:
-            product_id = product_result.data[0]["id"]
+            product_id = found_reciept_indeks["product_id"]
         
-        return {"success": True, "product_id": product_id}
+        return {"success": True, "product_id": product_id, "found_indeks": found}
         
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": str(e), "found_indeks": False}
 
 def build_paragon(item: dict) -> dict:
     """

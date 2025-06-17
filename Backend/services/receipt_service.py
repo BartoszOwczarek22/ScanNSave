@@ -43,13 +43,14 @@ def save_receipt_to_db(receipt: Receipt) -> Dict[str, Any]:
         
         receipt_id = receipt_result.data[0]["id"]
         
+        re_indekses_table = supabase_client.table("receipt_indekses").select("id, indeks, price, product_id, shop_id").execute()
         # Zapisz items jako receipt_indekses
         for item in receipt.items:
             if item.quantity == 0:
                 continue 
 
             # Pobierz lub utwórz produkt na podstawie nazwy
-            product_result = get_or_create_product(item.name)
+            product_result = get_or_create_product(item.name, re_indekses_table.data, shop_id)
             if not product_result["success"]:
                 print(f"Ostrzeżenie: {product_result['error']}")
                 product_id = None
