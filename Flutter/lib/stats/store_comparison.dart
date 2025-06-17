@@ -118,15 +118,6 @@ class _PriceComparisonScreenState extends State<PriceComparisonScreen> with Tick
     Widget build(BuildContext context) {
       return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: (){
-            Navigator.pushReplacement(
-              context, 
-              MaterialPageRoute(builder: (context) => HomePage())
-            );
-          }, 
-          icon: const Icon(Icons.arrow_back)
-        ),
         title: const Text('Porównywarka cen'),
         bottom: TabBar(
           controller: _tabController,
@@ -150,7 +141,7 @@ class _PriceComparisonScreenState extends State<PriceComparisonScreen> with Tick
             ),
           ),
           // Bottom menu
-          const NotchMenu(),
+          const NotchMenu(false, 3),
         ],
       ),
     );

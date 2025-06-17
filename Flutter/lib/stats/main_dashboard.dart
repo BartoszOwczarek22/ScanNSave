@@ -240,7 +240,7 @@ class _ExpenseStatisticsScreenState extends State<ExpenseStatisticsScreen> {
                 ),
         ),
         // Bottom menu
-        const NotchMenu(),
+        const NotchMenu(false, 1),
       ],
     ),
   );

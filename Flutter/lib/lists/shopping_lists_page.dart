@@ -17,13 +17,6 @@ class ShoppingListsPage extends StatelessWidget {
     return Scaffold(
     appBar: AppBar(
       title: const Text('Twoje listy zakupów'),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        ),
-      ),
     ),
     body: Stack(
       children: [
@@ -50,7 +43,7 @@ class ShoppingListsPage extends StatelessWidget {
           ),
         ),
         // Dodaj NotchMenu
-        const NotchMenu(),
+        const NotchMenu(false, 2),
       ],
     ),
     // Usuń floatingActionButton (funkcjonalność przeniesiona do NotchMenu)

@@ -203,7 +203,7 @@ Future<void> _loadMonthlySpending() async {
               ),
             ),
           ),
-          NotchMenu(),
+          NotchMenu(true, 5),
         ],
       ),
     );

@@ -203,14 +203,7 @@ Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: const Text('Historia zakupów'),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        },
-    ),
+      
   actions: [
     IconButton(
       icon: const Icon(Icons.refresh),
@@ -295,7 +288,7 @@ Widget build(BuildContext context) {
             ),
           ],
         ),
-        const NotchMenu(),
+        const NotchMenu(false, 0),
       ],
     ),
   );
