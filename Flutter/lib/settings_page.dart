@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/auth/logingPage.dart';
 import 'package:scan_n_save/providers/auth_providers.dart';
 import 'sharedprefsnotifier.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});

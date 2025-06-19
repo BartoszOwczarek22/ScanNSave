@@ -4,7 +4,7 @@ import 'package:scan_n_save/models/receipt.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.26:8000'; 
+  static const String baseUrl = 'http://192.168.1.47:8000'; 
 
   List<String> defaultShops = [
         'Biedronka','Żabka', 'Lidl','Kaufland','Carrefour','Auchan',

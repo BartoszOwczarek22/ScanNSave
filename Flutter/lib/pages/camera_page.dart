@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scan_n_save/pages/receipt_details_page.dart';
 import 'package:scan_n_save/providers/camera_providers.dart';
+import 'package:scan_n_save/core/notch_menu.dart';
 
 class CameraPage extends ConsumerStatefulWidget {
   CameraPage({super.key}) {}
