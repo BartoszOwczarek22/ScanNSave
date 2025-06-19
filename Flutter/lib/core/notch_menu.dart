@@ -4,7 +4,7 @@ import 'package:scan_n_save/core/clip_shadow_path.dart';
 import 'package:scan_n_save/lists/shopping_lists_page.dart';
 import 'package:scan_n_save/pages/camera_page.dart';
 import 'package:scan_n_save/pages/home_page.dart';
-import 'package:scan_n_save/pages/receipt_history_page.dart';
+import 'package:scan_n_save/pages/recipt_history/receipt_history_page.dart';
 import 'package:scan_n_save/sharedprefsnotifier.dart';
 import 'package:scan_n_save/stats/main_dashboard.dart';
 import 'package:scan_n_save/stats/store_comparison.dart';
