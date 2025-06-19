@@ -1,0 +1,19 @@
+1. Instalacja
+bash# Zainstaluj zależności testowe
+
+pip install -r requirements-test.txt
+
+# Lub użyj make
+
+make install
+
+2. Uruchomienie testów
+#wszystkie podstawowe testy 
+
+make test
+
+pytest test_services.py test_routers.py -v
+
+3. Testy z pokryciem kodu
+
+make test-coverage
