@@ -11,6 +11,8 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.post("/add")
 def add_user(user: UserInput):
+    if not user.token.strip():  # usuwa spacje i sprawdza pusty ciąg
+        raise HTTPException(status_code=400, detail="Token nie może być pusty")
     """
     Dodaje nowego użytkownika do bazy danych.
     """

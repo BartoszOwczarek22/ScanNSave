@@ -20,6 +20,9 @@ def get_user_paragons(
     """
     result = get_paragons_for_user(user_id, page, page_size, store_name)
     
+    if result is None:
+        raise HTTPException(status_code=500, detail="get_paragons_for_user zwrócił None")
+    
     if result["success"]:
         return {
             "paragons": result["paragons"],
@@ -41,6 +44,8 @@ def get_paragons_by_date_range(
     Pobiera paragony użytkownika w określonym zakresie dat
     """
     result = get_paragons_in_date_range(user_id, start_date, end_date)
+    if result is None:
+        raise HTTPException(status_code=500, detail="get_paragons_for_user zwrócił None")
     
     if result["success"]:
         return result["paragons"]
