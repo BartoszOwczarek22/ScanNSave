@@ -83,19 +83,6 @@ class StatsLegend extends StatelessWidget {
               );
             },
           ),
-          TextButton(
-            onPressed: () {
-              // nawigacja do szczegółów
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Zobacz dokładne statystyki'),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward, size: 16),
-              ],
-            ),
-          ),
         ],
       ),
     );
