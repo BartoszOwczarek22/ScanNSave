@@ -14,24 +14,19 @@ import 'package:scan_n_save/stats/store_comparison.dart';
 import 'package:scan_n_save/sharedprefsnotifier.dart';
 import 'package:scan_n_save/api_service.dart';
 
+
+
+final recentReceiptsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return [];
+
+  final api = ApiService();
+  final response = await api.getParagons(page: 1, pageSize: 2);
+  return List<Map<String, dynamic>>.from(response['items']);
+});
+
+
 // Sample data - just for MVP
-
-final recentReceiptsProvider = Provider<List<Map<String, dynamic>>>((ref) => [
-  {
-    'id': 1,
-    'store': 'Biedronka',
-    'date': 'Maj 19, 2025',
-    'total': '78 zł'
-  },
-  {
-    'id': 2,
-    'store': 'Żabka',
-    'date': 'Maj 15, 2025',
-    'total': '32.10 zł'
-  },
-]);
-
-
 final shoppingListsProvider = Provider<List<Map<String, dynamic>>>((ref) => [
   {'id': 1, 'name': 'Lista zakupów niedziela', 'items': 12},
   {'id': 2, 'name': 'Impreza', 'items': 8},
@@ -154,11 +149,22 @@ Future<void> _loadMonthlySpending() async {
                   _buildSectionCard(
                     'Ostatnie zakupy',
                     Icons.receipt,
-                    Column(
-                      children: recentReceipts
-                          .map((receipt) => _buildReceiptItem(receipt))
-                          .toList(),
-                    ),
+                    recentReceipts.when(
+                      data: (receipts){
+                        if (receipts.isEmpty) {
+                          return const Text(
+                            'Brak ostatnich paragonów',
+                            style: TextStyle(color: Colors.grey),
+                          );
+                        }
+                        return Column(
+                          children: receipts
+                          .map((receipt) => _buildReceiptItem(receipt)).toList(),
+                        );
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator(),),
+                      error: (e, st) => Text("Błąd: $e", style: const TextStyle(color:Colors.red),)
+                      ),
                     onSeeAll: () {
                       Navigator.push(
                         context,
@@ -277,7 +283,7 @@ Future<void> _loadMonthlySpending() async {
                 ),
                 if (onSeeAll != null)
                   TextButton(
-                    onPressed: () { if (title == "Porównywarka cen"){Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => PriceComparisonScreen()), );} else {
+                    onPressed: () { if (title == "Porównywarka cen"){Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => PriceComparisonScreen()), );} else if (title == "Ostatnie zakupy"){Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => ReceiptHistoryPage()), );} else {
                       Navigator.pushReplacement( context, MaterialPageRoute(builder: (context) => ShoppingListsPage()), );
                     }},
                     child: Row(
@@ -318,17 +324,20 @@ Future<void> _loadMonthlySpending() async {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                receipt['store'],
+                receipt['storeName']?.toString() ??
+                receipt['store_name']?.toString() ??
+                receipt['store']?.toString() ??
+                'Nieznany sklep',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               Text(
-                receipt['date'],
+                _formatReceiptDate(receipt),
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ),
           Text(
-            receipt['total'],
+            _formatPrice(receipt),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
@@ -433,4 +442,44 @@ String formatProdukt(int count) {
   } else {
     return '$count produktów';
   }
+}
+
+String _formatReceiptDate(Map<String, dynamic> receipt) {
+  final date = receipt['date'] ?? receipt['purchase_date'] ?? receipt['created_at'];
+  if (date == null) return 'Brak daty';
+
+  if (date is String) {
+    if (date.contains('T')) {
+      final parts = date.split('T')[0].split('-');
+      return '${parts[2]}.${parts[1]}.${parts[0]}';
+    } else if (date.contains('-')) {
+      final parts = date.split('-');
+      return '${parts[2]}.${parts[1]}.${parts[0]}';
+    } else {
+      return date;
+    }
+  }
+
+  return date.toString();
+}
+
+String _formatPrice(Map<String, dynamic> receipt) {
+  final amount = receipt['total'] ?? receipt['total_amount'] ?? receipt['price'];
+  if (amount == null) return '0,00 zł';
+
+  if (amount is num) {
+    return '${amount.toStringAsFixed(2).replaceAll('.', ',')} zł';
+  }
+
+  if (amount is String) {
+    if (amount.contains('zł')) {
+      return amount;
+    }
+    final parsed = double.tryParse(amount.replaceAll(',', '.'));
+    if (parsed != null) {
+      return '${parsed.toStringAsFixed(2).replaceAll('.', ',')} zł';
+    }
+  }
+
+  return amount.toString();
 }
